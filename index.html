@@ -1,1 +1,2218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kingdom Builder v3 — Classroom RPG</title>
+<link href="https://fonts.googleapis.com/css2?family=MedievalSharp&family=Nunito:wght@400;600;700;800&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --em:#10b981;--emd:#059669;--eml:#34d399;
+  --ro:#1d4ed8;--rod:#1e3a8a;--rol:#3b82f6;
+  --pu:#7c3aed;--pud:#4c1d95;--pul:#a78bfa;
+  --go:#f59e0b;--god:#d97706;--gol:#fbbf24;
+  --cr:#dc2626;--crl:#f87171;
+  --hp:#ec4899;--hpl:#f9a8d4; /* hero points pink */
+  --bg0:#0a0d1a;--bg1:#111827;--bg2:#1a2035;--bg3:#1f2d45;
+  --bgl:rgba(245,158,11,.3);--tp:#f0e6d3;--tm:#94a3b8;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Nunito',sans-serif;background:var(--bg0);color:var(--tp);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 20% 20%,rgba(29,78,216,.12) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 80% 80%,rgba(124,58,237,.1) 0%,transparent 60%);pointer-events:none;z-index:0;}
 
+/* ── HEADER ── */
+.hdr{position:sticky;top:0;z-index:200;background:rgba(10,13,26,.96);border-bottom:1px solid var(--bgl);backdrop-filter:blur(12px);padding:0 1.25rem;display:flex;align-items:center;justify-content:space-between;height:58px;gap:.75rem;}
+.logo{font-family:'MedievalSharp',serif;font-size:1.1rem;color:var(--go);text-shadow:0 0 20px rgba(245,158,11,.4);white-space:nowrap;}
+.logo span{color:var(--eml);}
+.ntabs{display:flex;gap:2px;flex-wrap:wrap;}
+.nt{font-family:'Nunito',sans-serif;font-size:.68rem;font-weight:700;padding:5px 10px;border-radius:6px;border:1px solid transparent;background:transparent;color:var(--tm);cursor:pointer;transition:all .2s;text-transform:uppercase;letter-spacing:.04em;}
+.nt:hover{background:rgba(245,158,11,.1);color:var(--gol);border-color:rgba(245,158,11,.2);}
+.nt.active{background:rgba(245,158,11,.15);color:var(--go);border-color:rgba(245,158,11,.4);}
+.nt.hp-tab{color:var(--hpl);}
+.nt.hp-tab:hover{background:rgba(236,72,153,.1);border-color:rgba(236,72,153,.3);}
+.nt.hp-tab.active{background:rgba(236,72,153,.15);color:var(--hp);border-color:rgba(236,72,153,.4);}
+
+/* ── LAYOUT ── */
+main{position:relative;z-index:1;padding:1.25rem;max-width:1440px;margin:0 auto;}
+.page{display:none;}.page.active{display:block;}
+
+/* ── CARDS ── */
+.card{background:var(--bg2);border:1px solid rgba(245,158,11,.15);border-radius:12px;padding:1.25rem;position:relative;overflow:hidden;}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--god),transparent);opacity:.5;}
+.card.hp-card{border-color:rgba(236,72,153,.2);}
+.card.hp-card::before{background:linear-gradient(90deg,transparent,var(--hp),transparent);}
+.card.hero-card{border-color:rgba(16,185,129,.15);}
+.card.hero-card::before{background:linear-gradient(90deg,transparent,var(--emd),transparent);}
+.ct{font-family:'MedievalSharp',serif;font-size:.9rem;color:var(--go);margin-bottom:.875rem;display:flex;align-items:center;gap:8px;}
+
+/* ── GRIDS ── */
+.g2{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;}
+.ga{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;}
+.ga3{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem;}
+
+/* ── TYPE ── */
+.sh{font-family:'MedievalSharp',serif;font-size:1.35rem;color:var(--go);text-shadow:0 0 30px rgba(245,158,11,.3);margin-bottom:.2rem;}
+.ss{color:var(--tm);font-size:.82rem;margin-bottom:1.1rem;}
+
+/* ── PILLS ── */
+.pill{display:inline-flex;align-items:center;gap:5px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:3px 9px;font-family:'Orbitron',monospace;font-size:.65rem;color:var(--tm);}
+.pill b{color:var(--tp);font-weight:700;}
+.pill.g{border-color:rgba(245,158,11,.3);color:var(--gol);}.pill.g b{color:var(--go);}
+.pill.x{border-color:rgba(16,185,129,.3);color:var(--eml);}.pill.x b{color:var(--em);}
+.pill.lv{border-color:rgba(124,58,237,.3);color:var(--pul);}.pill.lv b{color:var(--pul);}
+.pill.hp{border-color:rgba(236,72,153,.3);color:var(--hpl);}.pill.hp b{color:var(--hp);}
+
+/* ── PROGRESS BARS ── */
+.pb{height:6px;border-radius:3px;background:rgba(255,255,255,.06);overflow:hidden;}
+.pf{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--emd),var(--eml));transition:width .6s cubic-bezier(.34,1.56,.64,1);}
+.pf.go{background:linear-gradient(90deg,var(--god),var(--gol));}
+.pf.pu{background:linear-gradient(90deg,var(--pud),var(--pul));}
+.pf.ro{background:linear-gradient(90deg,var(--rod),var(--rol));}
+.pf.cr{background:linear-gradient(90deg,#7f1d1d,#ff6b6b);}
+.pf.du{background:linear-gradient(90deg,#92400e,#fbbf24);}
+.pf.hp{background:linear-gradient(90deg,#9d174d,var(--hp));}
+
+/* ── BUTTONS ── */
+.btn{font-family:'Nunito',sans-serif;font-size:.75rem;font-weight:700;padding:7px 14px;border-radius:8px;border:1px solid transparent;cursor:pointer;transition:all .2s;text-transform:uppercase;letter-spacing:.05em;}
+.bgo{background:linear-gradient(135deg,var(--god),var(--go));color:#1a1000;border-color:var(--go);}
+.bgo:hover{box-shadow:0 0 20px rgba(245,158,11,.4);transform:translateY(-1px);}
+.bem{background:linear-gradient(135deg,var(--emd),var(--em));color:#001a0d;border-color:var(--em);}
+.bem:hover{box-shadow:0 0 20px rgba(16,185,129,.4);transform:translateY(-1px);}
+.bpu{background:linear-gradient(135deg,var(--pud),var(--pu));color:#f0e6ff;border-color:var(--pul);}
+.bpu:hover{box-shadow:0 0 20px rgba(124,58,237,.4);transform:translateY(-1px);}
+.bro{background:linear-gradient(135deg,var(--rod),var(--ro));color:#e0eaff;border-color:var(--rol);}
+.bro:hover{transform:translateY(-1px);}
+.bre{background:rgba(220,38,38,.2);border-color:rgba(220,38,38,.4);color:#fca5a5;}
+.bre:hover{background:rgba(220,38,38,.35);}
+.bgh{background:transparent;border-color:rgba(255,255,255,.15);color:var(--tm);}
+.bgh:hover{border-color:rgba(245,158,11,.3);color:var(--gol);}
+.bor{background:rgba(249,115,22,.2);border-color:rgba(249,115,22,.4);color:#fdba74;}
+.bor:hover{background:rgba(249,115,22,.35);}
+.bhp{background:linear-gradient(135deg,#9d174d,var(--hp));color:#fff0f6;border-color:var(--hpl);}
+.bhp:hover{box-shadow:0 0 20px rgba(236,72,153,.4);transform:translateY(-1px);}
+.bsm{padding:4px 9px;font-size:.65rem;}
+.bxs{padding:3px 7px;font-size:.6rem;}
+
+/* ── CLASS BADGES ── */
+.cb{display:inline-block;font-size:.62rem;font-weight:800;padding:2px 7px;border-radius:4px;text-transform:uppercase;letter-spacing:.08em;}
+.Scholar{background:rgba(59,130,246,.2);color:#93c5fd;border:1px solid rgba(59,130,246,.3);}
+.Explorer{background:rgba(16,185,129,.2);color:#6ee7b7;border:1px solid rgba(16,185,129,.3);}
+.Inventor{background:rgba(245,158,11,.2);color:#fcd34d;border:1px solid rgba(245,158,11,.3);}
+.Builder{background:rgba(239,68,68,.2);color:#fca5a5;border:1px solid rgba(239,68,68,.3);}
+.Historian{background:rgba(124,58,237,.2);color:#c4b5fd;border:1px solid rgba(124,58,237,.3);}
+
+/* ── ACHIEVEMENT BADGES ── */
+.ab{display:inline-flex;align-items:center;gap:4px;font-size:.6rem;font-weight:700;padding:2px 7px;border-radius:10px;text-transform:uppercase;}
+.Caring{background:rgba(236,72,153,.2);color:#f9a8d4;border:1px solid rgba(236,72,153,.3);}
+.Thinker{background:rgba(59,130,246,.2);color:#93c5fd;border:1px solid rgba(59,130,246,.3);}
+.Communicator{background:rgba(16,185,129,.2);color:#6ee7b7;border:1px solid rgba(16,185,129,.3);}
+.Risk-Taker{background:rgba(245,158,11,.2);color:#fcd34d;border:1px solid rgba(245,158,11,.3);}
+.Inquirer{background:rgba(124,58,237,.2);color:#c4b5fd;border:1px solid rgba(124,58,237,.3);}
+
+/* ── FORMS ── */
+.fg{margin-bottom:.875rem;}
+.fl{font-size:.7rem;font-weight:700;color:var(--tm);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;display:block;}
+.fi,.fs{width:100%;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:8px 12px;color:var(--tp);font-family:'Nunito',sans-serif;font-size:.85rem;outline:none;transition:border-color .2s;}
+.fi:focus,.fs:focus{border-color:rgba(245,158,11,.5);}
+.fs option{background:var(--bg2);}
+textarea.fi{resize:vertical;min-height:60px;}
+
+/* ── STUDENT CARDS ── */
+.sc{background:var(--bg2);border:1px solid rgba(245,158,11,.15);border-radius:12px;padding:1.1rem;cursor:pointer;transition:all .25s;position:relative;}
+.sc:hover{border-color:rgba(245,158,11,.4);transform:translateY(-3px);box-shadow:0 8px 30px rgba(0,0,0,.4);}
+.sav{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem;margin-bottom:.6rem;border:2px solid rgba(245,158,11,.3);}
+
+/* ── KINGDOM MAP ── */
+.kmap{position:relative;background:rgba(0,0,0,.3);border-radius:12px;border:1px solid rgba(245,158,11,.2);overflow:hidden;}
+.kdots{position:absolute;inset:0;background-image:radial-gradient(circle,rgba(245,158,11,.07) 1px,transparent 1px);background-size:28px 28px;pointer-events:none;}
+.bs{position:absolute;cursor:pointer;transition:all .3s;text-align:center;}
+.bs:hover{transform:scale(1.12);}
+.bi{font-size:1.6rem;display:block;filter:drop-shadow(0 0 6px rgba(245,158,11,.3));}
+.bl{font-size:.55rem;color:var(--tm);font-weight:700;text-transform:uppercase;margin-top:1px;}
+.bpw{width:48px;height:3px;background:rgba(255,255,255,.1);border-radius:2px;margin:3px auto 0;overflow:hidden;}
+.bpf{height:100%;background:linear-gradient(90deg,var(--god),var(--gol));border-radius:2px;transition:width .6s ease;}
+.bdw{width:48px;height:2px;background:rgba(255,255,255,.06);border-radius:2px;margin:2px auto 0;overflow:hidden;}
+.bdf{height:100%;border-radius:2px;transition:width .6s ease;}
+
+/* ── HERO KINGDOM MAP (personal, smaller) ── */
+.hkmap{position:relative;background:linear-gradient(135deg,rgba(16,185,129,.05),rgba(29,78,216,.05));border-radius:12px;border:1px solid rgba(16,185,129,.2);overflow:hidden;min-height:220px;}
+.hkmap .kdots{background-image:radial-gradient(circle,rgba(16,185,129,.06) 1px,transparent 1px);}
+
+/* ── ALLOCATION SLIDER ── */
+.alloc-wrap{background:rgba(0,0,0,.25);border-radius:10px;padding:1rem;border:1px solid rgba(255,255,255,.06);margin-bottom:.875rem;}
+.alloc-labels{display:flex;justify-content:space-between;font-size:.72rem;margin-bottom:.5rem;}
+.alloc-bar{position:relative;height:10px;border-radius:5px;background:rgba(255,255,255,.06);overflow:hidden;margin-bottom:.5rem;}
+.alloc-hero{position:absolute;left:0;top:0;height:100%;background:linear-gradient(90deg,var(--emd),var(--eml));border-radius:5px;transition:width .3s;}
+.alloc-class{position:absolute;right:0;top:0;height:100%;background:linear-gradient(90deg,var(--pud),var(--pul));border-radius:5px;transition:width .3s;}
+.alloc-btns{display:flex;gap:5px;flex-wrap:wrap;}
+.alloc-btn{font-family:'Nunito',sans-serif;font-size:.65rem;font-weight:700;padding:4px 8px;border-radius:6px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:var(--tm);cursor:pointer;transition:all .2s;}
+.alloc-btn:hover{border-color:rgba(245,158,11,.3);color:var(--gol);}
+.alloc-btn.active{background:rgba(245,158,11,.15);border-color:rgba(245,158,11,.4);color:var(--go);}
+
+/* ── EVENT CARD ── */
+.evc{border-radius:12px;padding:1.25rem;border:2px solid;position:relative;overflow:hidden;}
+.evc-c{background:linear-gradient(135deg,rgba(59,130,246,.1),rgba(29,78,216,.08));border-color:rgba(59,130,246,.4);}
+.evc-r{background:linear-gradient(135deg,rgba(124,58,237,.12),rgba(76,29,149,.1));border-color:rgba(124,58,237,.5);}
+.evc-e{background:linear-gradient(135deg,rgba(245,158,11,.12),rgba(220,38,38,.08));border-color:rgba(245,158,11,.6);animation:epicP 3s ease-in-out infinite;}
+@keyframes epicP{0%,100%{box-shadow:0 0 10px rgba(245,158,11,.2)}50%{box-shadow:0 0 30px rgba(245,158,11,.4)}}
+
+/* ── LEADERBOARD ── */
+.lbr{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;background:rgba(0,0,0,.2);margin-bottom:5px;border:1px solid rgba(255,255,255,.04);transition:all .2s;}
+.lbr:hover{border-color:rgba(245,158,11,.2);}
+.lbrnk{font-family:'Orbitron',monospace;font-size:.8rem;font-weight:900;width:24px;text-align:center;}
+.r1{color:var(--go);}.r2{color:#94a3b8;}.r3{color:#cd7f32;}
+
+/* ── QUEST CARD ── */
+.qc{background:var(--bg2);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:1rem;position:relative;overflow:hidden;transition:all .2s;}
+.qc:hover{border-color:rgba(245,158,11,.3);transform:translateY(-2px);}
+.qc.cq{border-color:rgba(124,58,237,.25);}
+.qc.dn{opacity:.55;}
+.qc.dn::after{content:'✓ DONE';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-15deg);font-family:'MedievalSharp',serif;font-size:1.1rem;color:var(--em);background:rgba(0,0,0,.75);padding:4px 12px;border-radius:4px;border:2px solid var(--em);}
+
+/* ── BOSS ── */
+.bssc{background:linear-gradient(135deg,rgba(15,0,30,.8),rgba(30,0,15,.6));border:1px solid rgba(220,38,38,.3);border-radius:12px;padding:1.25rem;text-align:center;cursor:pointer;transition:all .3s;position:relative;}
+.bssc:hover{border-color:rgba(220,38,38,.6);box-shadow:0 0 30px rgba(220,38,38,.2);transform:translateY(-3px);}
+.aw{background:linear-gradient(180deg,rgba(15,0,30,.95),rgba(30,0,10,.8));border:2px solid rgba(220,38,38,.4);border-radius:16px;padding:2rem;text-align:center;position:relative;}
+.ab2{font-size:5rem;display:block;margin:1rem 0;animation:bflt 3s ease-in-out infinite;}
+@keyframes bflt{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.atk{font-family:'MedievalSharp',serif;font-size:.85rem;background:linear-gradient(135deg,#7f1d1d,var(--cr));color:#fff;border:2px solid rgba(220,38,38,.6);border-radius:10px;padding:9px 22px;cursor:pointer;transition:all .2s;}
+.atk:hover{transform:scale(1.05);box-shadow:0 0 20px rgba(220,38,38,.4);}
+.blog{max-height:110px;overflow-y:auto;background:rgba(0,0,0,.3);border-radius:8px;padding:7px 10px;margin-top:.75rem;text-align:left;}
+.ble{font-size:.72rem;color:var(--tm);padding:1px 0;border-bottom:1px solid rgba(255,255,255,.03);}
+.ble.h{color:#fca5a5;}.ble.bh{color:#fcd34d;}.ble.v{color:var(--eml);font-weight:700;}
+
+/* ── MODAL ── */
+.mo{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.72);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:1.5rem;}
+.mo.open{display:flex;}
+.mb{background:var(--bg1);border:1px solid rgba(245,158,11,.3);border-radius:16px;padding:1.75rem;max-width:500px;width:100%;max-height:85vh;overflow-y:auto;position:relative;}
+.mt{font-family:'MedievalSharp',serif;font-size:1.1rem;color:var(--go);margin-bottom:1.25rem;display:flex;align-items:center;gap:8px;}
+.mc{position:absolute;top:.875rem;right:.875rem;background:rgba(255,255,255,.08);border:none;width:28px;height:28px;border-radius:50%;color:var(--tm);cursor:pointer;font-size:.9rem;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.mc:hover{background:rgba(220,38,38,.3);color:#fca5a5;}
+
+/* ── PIN ── */
+.pdot{width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.2);transition:all .15s;}
+.pdot.f{background:var(--go);border-color:var(--go);}
+.pdot.e{background:var(--cr);border-color:var(--cr);animation:shk .4s ease;}
+.pkey{font-family:'Orbitron',monospace;font-size:1rem;font-weight:700;padding:12px 0;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--tp);cursor:pointer;transition:all .15s;}
+.pkey:hover{background:rgba(245,158,11,.15);border-color:rgba(245,158,11,.3);}
+.pkey:active{transform:scale(.93);}
+.pcl{background:rgba(220,38,38,.1);border-color:rgba(220,38,38,.2);color:#fca5a5;}
+.pok{background:rgba(16,185,129,.15);border-color:rgba(16,185,129,.3);color:var(--eml);}
+
+/* ── TOAST ── */
+#tc{position:fixed;top:68px;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:6px;}
+.toast{background:var(--bg2);border:1px solid rgba(245,158,11,.4);border-radius:10px;padding:10px 14px;font-size:.8rem;font-weight:600;color:var(--tp);animation:tIn .3s ease,tOut .3s ease 2.7s forwards;display:flex;align-items:center;gap:8px;max-width:290px;}
+.toast.s{border-color:rgba(16,185,129,.5);}.toast.d{border-color:rgba(220,38,38,.5);}
+.toast.hp{border-color:rgba(236,72,153,.5);}
+@keyframes tIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
+@keyframes tOut{from{opacity:1}to{opacity:0;transform:translateX(30px)}}
+@keyframes shk{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+@keyframes popIn{from{transform:scale(0)}to{transform:scale(1)}}
+
+/* ── MISC ── */
+.dv{height:1px;background:rgba(255,255,255,.06);margin:.75rem 0;}
+.tbdg{display:inline-flex;align-items:center;gap:5px;font-family:'MedievalSharp',serif;font-size:.72rem;padding:3px 10px;border-radius:5px;border:1px solid;}
+.t1{background:rgba(245,158,11,.1);color:var(--gol);border-color:rgba(245,158,11,.3);}
+.t2{background:rgba(124,58,237,.15);color:var(--pul);border-color:rgba(124,58,237,.4);}
+.t3{background:rgba(220,38,38,.15);color:#fca5a5;border-color:rgba(220,38,38,.4);}
+.xqr{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:.75rem;}
+.xqb{font-family:'Orbitron',monospace;font-size:.65rem;font-weight:700;padding:6px 8px;border-radius:7px;border:1px solid rgba(16,185,129,.3);background:rgba(16,185,129,.1);color:var(--eml);cursor:pointer;transition:all .2s;}
+.xqb:hover{background:rgba(16,185,129,.25);transform:translateY(-1px);}
+.xqb.rm{border-color:rgba(220,38,38,.3);background:rgba(220,38,38,.1);color:#fca5a5;}
+.xqb.rm:hover{background:rgba(220,38,38,.25);}
+.xqb.hpb{border-color:rgba(236,72,153,.3);background:rgba(236,72,153,.1);color:var(--hpl);}
+.xqb.hpb:hover{background:rgba(236,72,153,.25);}
+.hfa{background:rgba(0,0,0,.2);border-radius:10px;padding:12px;border:1px solid rgba(245,158,11,.15);margin-bottom:8px;display:flex;align-items:center;gap:12px;}
+.si{background:var(--bg2);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:1rem;text-align:center;transition:all .2s;}
+.si:hover{border-color:rgba(245,158,11,.3);transform:translateY(-2px);}
+.db{background:linear-gradient(135deg,rgba(245,158,11,.12),rgba(16,185,129,.08));border:2px solid rgba(245,158,11,.3);border-radius:12px;padding:1.25rem;text-align:center;animation:gp 2s ease-in-out infinite;}
+@keyframes gp{0%,100%{box-shadow:0 0 8px rgba(245,158,11,.2)}50%{box-shadow:0 0 25px rgba(245,158,11,.4)}}
+
+/* ── REWARD SHOP ITEMS ── */
+.shop-item{background:linear-gradient(135deg,rgba(236,72,153,.08),rgba(124,58,237,.06));border:1px solid rgba(236,72,153,.2);border-radius:12px;padding:1.1rem;text-align:center;transition:all .2s;position:relative;}
+.shop-item:hover{border-color:rgba(236,72,153,.4);transform:translateY(-2px);box-shadow:0 6px 20px rgba(236,72,153,.1);}
+.shop-item .si-icon{font-size:2.2rem;display:block;margin-bottom:.5rem;}
+.shop-item .si-name{font-family:'MedievalSharp',serif;font-size:.85rem;color:var(--tp);margin-bottom:.3rem;}
+.shop-item .si-cost{font-family:'Orbitron',monospace;font-size:.8rem;color:var(--hp);margin-bottom:.5rem;}
+.shop-item .si-desc{font-size:.7rem;color:var(--tm);line-height:1.5;margin-bottom:.75rem;}
+
+/* ── REWARD QUEUE ── */
+.rq-item{background:rgba(0,0,0,.25);border-radius:10px;padding:12px 14px;border:1px solid rgba(236,72,153,.15);margin-bottom:8px;display:flex;align-items:center;gap:12px;}
+.rq-status{font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;padding:3px 8px;border-radius:4px;}
+.rq-pending{background:rgba(245,158,11,.15);color:var(--gol);border:1px solid rgba(245,158,11,.3);}
+.rq-approved{background:rgba(16,185,129,.15);color:var(--eml);border:1px solid rgba(16,185,129,.3);}
+.rq-complete{background:rgba(124,58,237,.15);color:var(--pul);border:1px solid rgba(124,58,237,.3);}
+.rq-declined{background:rgba(220,38,38,.15);color:#fca5a5;border:1px solid rgba(220,38,38,.3);}
+
+/* ── CLASS UNLOCK TRACKER ── */
+.unlock-tier{background:rgba(0,0,0,.2);border-radius:12px;padding:1rem;border:1px solid rgba(255,255,255,.06);margin-bottom:.75rem;position:relative;overflow:hidden;}
+.unlock-tier.unlocked{border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.04);}
+.unlock-reward{font-size:1.6rem;margin-bottom:.25rem;}
+.unlock-name{font-family:'MedievalSharp',serif;font-size:.88rem;color:var(--go);}
+.unlock-desc{font-size:.72rem;color:var(--tm);margin:.2rem 0 .5rem;}
+
+/* ── HERO PERSONAL KINGDOM ── */
+.hk-building{background:rgba(0,0,0,.25);border-radius:10px;padding:.875rem;border:1px solid rgba(16,185,129,.1);text-align:center;cursor:pointer;transition:all .2s;}
+.hk-building:hover{border-color:rgba(16,185,129,.35);transform:translateY(-2px);}
+.hk-building .hkb-ico{font-size:2rem;display:block;margin-bottom:.4rem;}
+.hk-building .hkb-name{font-family:'MedievalSharp',serif;font-size:.78rem;color:var(--gol);margin-bottom:.25rem;}
+.hk-building.locked{opacity:.45;cursor:default;}
+.hk-building.locked:hover{transform:none;}
+
+/* ── COSMETIC ITEMS ── */
+.cosm-item{background:rgba(0,0,0,.2);border-radius:10px;padding:.75rem;border:1px solid rgba(255,255,255,.06);text-align:center;transition:all .2s;}
+.cosm-item:hover{border-color:rgba(245,158,11,.3);}
+.cosm-item.owned{border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.05);}
+.cosm-item.owned::after{content:'✓';position:absolute;top:5px;right:8px;color:var(--em);font-weight:900;font-size:.75rem;}
+.cosm-item{position:relative;}
+
+/* ── TAX BANNER ── */
+.tax-banner{background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.25);border-radius:8px;padding:8px 12px;font-size:.75rem;color:var(--pul);display:flex;align-items:center;gap:8px;margin-bottom:.75rem;}
+
+/* ── RESPONSIVE ── */
+@media(max-width:960px){
+  .g4{grid-template-columns:repeat(2,1fr);}
+  .g3{grid-template-columns:repeat(2,1fr);}
+  .g2{grid-template-columns:1fr;}
+  main{padding:1rem;}
+  .nt{padding:4px 7px;font-size:.6rem;}
+  .logo{font-size:.95rem;}
+}
+
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:rgba(0,0,0,.2);border-radius:3px;}
+::-webkit-scrollbar-thumb{background:rgba(245,158,11,.3);border-radius:3px;}
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<header class="hdr">
+  <div class="logo">⚔️ Kingdom <span>Builder</span> <span style="font-size:.65rem;color:var(--tm);font-family:'Nunito',sans-serif;">v3</span></div>
+  <nav class="ntabs">
+    <button class="nt active" onclick="nav('classkingdom',event)">🏰 Class Kingdom</button>
+    <button class="nt" onclick="nav('herokingdom',event)">⚔️ Hero Kingdom</button>
+    <button class="nt" onclick="nav('heroes',event)">👥 Heroes</button>
+    <button class="nt" onclick="nav('events',event)">⚡ Events</button>
+    <button class="nt" onclick="nav('quests',event)">📜 Quests</button>
+    <button class="nt" onclick="nav('bosses',event)">🐉 Bosses</button>
+    <button class="nt" onclick="nav('awards',event)">🏆 Awards</button>
+    <button class="nt hp-tab" onclick="nav('shop',event)">⭐ Reward Shop</button>
+    <button class="nt" onclick="teacherClick(event)" id="ttab">🔒 Teacher</button>
+  </nav>
+</header>
+
+<div id="tc"></div>
+<main>
+<!-- ══ CLASS KINGDOM PAGE ══ -->
+<div id="page-classkingdom" class="page active">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.3rem;">
+    <div class="sh">🏰 The Class Kingdom</div>
+    <div style="display:flex;gap:6px;align-items:center;">
+      <span id="ktbdg" class="tbdg t1">⭐ Tier 1</span>
+      <button class="btn bgo bsm" onclick="openContribute()">🏗 Contribute</button>
+    </div>
+  </div>
+  <p class="ss">Work together to build the greatest kingdom the realm has ever seen!</p>
+  <div id="dbwrap" style="margin-bottom:.875rem;"></div>
+  <div id="evmini" style="margin-bottom:.875rem;"></div>
+
+  <!-- Class Unlock Progress -->
+  <div class="card" style="margin-bottom:1rem;border-color:rgba(236,72,153,.2);">
+    <div class="ct" style="color:var(--hpl);">🎉 Class Unlock Progress</div>
+    <div id="unlock-tracker"></div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:200px 1fr;gap:1rem;margin-bottom:1rem;">
+    <div class="card">
+      <div class="ct">🏛 Resources</div>
+      <div id="resdisplay"></div>
+      <div class="dv"></div>
+      <div style="font-size:.68rem;color:var(--tm);line-height:1.9;">
+        🪨 <b style="color:var(--tp);">Stone</b> → Castle, Harbor<br>
+        🪵 <b style="color:var(--tp);">Wood</b> → Library, Market<br>
+        💰 <b style="color:var(--tp);">Gold</b> → Castle, Market<br>
+        📚 <b style="color:var(--tp);">Knowledge</b> → Library, Obs
+      </div>
+      <div class="dv"></div>
+      <button class="btn bgo bsm" style="width:100%;" onclick="openContribute()">🏗 Contribute</button>
+    </div>
+    <div class="card">
+      <div class="ct">🗺 Kingdom Map — <span id="maptlbl" style="color:var(--pul);font-size:.75rem;">Tier 1: The Founding</span></div>
+      <div class="kmap" id="kmap" style="height:260px;">
+        <div class="kdots"></div>
+        <div style="position:absolute;bottom:8px;right:12px;font-family:'MedievalSharp',serif;font-size:.58rem;color:rgba(245,158,11,.2);">Realm of Learning</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <div class="ct">🏆 Hero Leaderboard</div>
+      <div style="display:flex;gap:4px;margin-bottom:.75rem;flex-wrap:wrap;" id="lbtabs">
+        <button class="btn bsm bgh" style="border-color:rgba(245,158,11,.4);color:var(--go);" onclick="setLB('xp',this)">XP</button>
+        <button class="btn bsm bgh" onclick="setLB('hp',this)">Hero Pts</button>
+        <button class="btn bsm bgh" onclick="setLB('helpful',this)">Helpful</button>
+        <button class="btn bsm bgh" onclick="setLB('quests',this)">Quests</button>
+        <button class="btn bsm bgh" onclick="setLB('improved',this)">Improved</button>
+      </div>
+      <div id="lblist"></div>
+    </div>
+    <div class="card">
+      <div class="ct">🌟 Achievement Gallery</div>
+      <div id="achgal" style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:.875rem;"></div>
+      <div class="ct" style="margin-bottom:.4rem;font-size:.82rem;">📅 This Week</div>
+      <div id="wkprog"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ HERO KINGDOM PAGE ══ -->
+<div id="page-herokingdom" class="page">
+  <div class="sh">⚔️ Hero Kingdom</div>
+  <p class="ss">Select a hero to explore their personal kingdom.</p>
+  <div class="ga" id="hk-select-grid"></div>
+  <div id="hk-detail" style="display:none;margin-top:1rem;">
+    <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;" id="hk-hero-header"></div>
+    <div class="g2" style="margin-bottom:1rem;">
+      <div class="card hero-card">
+        <div class="ct">🗺 Personal Kingdom Map</div>
+        <div class="hkmap" id="hkmap" style="height:220px;">
+          <div class="kdots"></div>
+          <div style="position:absolute;bottom:6px;right:10px;font-family:'MedievalSharp',serif;font-size:.55rem;color:rgba(16,185,129,.2);">Your Realm</div>
+        </div>
+      </div>
+      <div>
+        <div class="card hero-card" style="margin-bottom:.75rem;">
+          <div class="ct">📦 Personal Resources</div>
+          <div id="hk-res-display"></div>
+        </div>
+        <div class="card hero-card">
+          <div class="ct">🎖 Hero Stats</div>
+          <div id="hk-stats-display"></div>
+        </div>
+      </div>
+    </div>
+    <div class="g2" style="margin-bottom:1rem;">
+      <div class="card">
+        <div class="ct">🏗 Personal Buildings</div>
+        <div class="ga" id="hk-buildings" style="grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:.6rem;"></div>
+      </div>
+      <div class="card">
+        <div class="ct">🐾 Pets &amp; Cosmetics</div>
+        <div id="hk-cosmetics"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ct">🛒 Buy for Your Kingdom</div>
+      <p style="font-size:.75rem;color:var(--tm);margin-bottom:.75rem;">Spend your personal Gold &amp; resources on buildings, pets, and decorations!</p>
+      <div class="ga" id="hk-shop" style="grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.6rem;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ HEROES PAGE ══ -->
+<div id="page-heroes" class="page">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.1rem;">
+    <div><div class="sh">👥 Heroes of the Realm</div><p class="ss" style="margin:0;">Click a hero to view their full profile.</p></div>
+    <button class="btn bgo" onclick="openModal('m-addh')">+ Enroll Hero</button>
+  </div>
+  <div class="ga" id="hgrid"></div>
+</div>
+
+<!-- ══ EVENTS PAGE ══ -->
+<div id="page-events" class="page">
+  <div class="sh">⚡ Kingdom Events</div>
+  <p class="ss">Weekly challenges — work together to overcome them before Friday!</p>
+  <div id="evfull"></div>
+</div>
+
+<!-- ══ QUESTS PAGE ══ -->
+<div id="page-quests" class="page">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem;">
+    <div class="sh">📜 Active Quests</div>
+    <span style="font-size:.68rem;color:var(--pul);background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.2);padding:3px 8px;border-radius:5px;">⭐ Purple = Teacher Quest</span>
+  </div>
+  <p class="ss">Complete quests to earn XP, Gold, resources, and Hero Points!</p>
+  <div class="g3" id="qgrid"></div>
+</div>
+
+<!-- ══ BOSSES PAGE ══ -->
+<div id="page-bosses" class="page">
+  <div class="sh">🐉 Boss Battles</div>
+  <p class="ss">The whole class fights together — deal damage through quests, assignments, and good behavior!</p>
+  <div id="clsboss" style="margin-bottom:1.1rem;"></div>
+  <div class="g3" id="bgrid"></div>
+</div>
+
+<!-- ══ AWARDS PAGE ══ -->
+<div id="page-awards" class="page">
+  <div class="sh">🏆 Hall of Fame</div>
+  <p class="ss">Automatic weekly awards every Friday + special teacher recognitions.</p>
+  <div class="g2" style="margin-bottom:1rem;">
+    <div class="card"><div class="ct">🤖 This Week's Auto Awards</div><div id="autoaw"></div></div>
+    <div class="card"><div class="ct">🎖 Teacher Special Awards</div><div id="teachaw"></div></div>
+  </div>
+  <div class="card"><div class="ct">📜 Award History</div><div id="awhist"></div></div>
+</div>
+
+<!-- ══ REWARD SHOP PAGE ══ -->
+<div id="page-shop" class="page">
+  <div class="sh" style="color:var(--hp);">⭐ Hero Reward Shop</div>
+  <p class="ss">Spend your <b style="color:var(--hp);">Hero Points ⭐</b> — earned through great work, earned by being yourself. These cannot be traded or donated. Only you can spend yours!</p>
+
+  <!-- Hero selector for shop -->
+  <div class="card hp-card" style="margin-bottom:1rem;display:flex;align-items:center;gap:1rem;padding:.875rem 1.25rem;">
+    <span style="font-size:1.4rem;">⭐</span>
+    <div style="flex:1;">
+      <label class="fl" style="margin-bottom:4px;">Shopping as Hero</label>
+      <select class="fs" id="shop-hero-sel" style="max-width:280px;" onchange="rShopHeroStats()"></select>
+    </div>
+    <div id="shop-hero-stats" style="text-align:right;"></div>
+  </div>
+
+  <div class="ga3" id="shop-grid"></div>
+
+  <div class="card hp-card" style="margin-top:1.25rem;">
+    <div class="ct" style="color:var(--hpl);">📋 My Pending Requests</div>
+    <div id="my-queue"></div>
+  </div>
+</div>
+
+<!-- ══ TEACHER PAGE ══ -->
+<div id="page-teacher" class="page">
+  <div class="sh">🎓 Teacher Dashboard</div>
+  <p class="ss">Manage heroes, award XP &amp; Hero Points, approve rewards. <span style="color:var(--eml);">Under 5 minutes a day.</span></p>
+
+  <!-- Quick stats -->
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:.75rem;margin-bottom:1rem;" id="qstats"></div>
+
+  <!-- Hero selector -->
+  <div class="card" style="margin-bottom:1rem;display:flex;align-items:center;gap:1rem;padding:.875rem 1.25rem;">
+    <span style="font-size:1.2rem;">🎯</span>
+    <div style="flex:1;">
+      <label class="fl" style="margin-bottom:4px;">Active Hero</label>
+      <select class="fs" id="thero" style="max-width:300px;" onchange="updatePrev()"></select>
+    </div>
+    <div id="hprev" style="font-size:.72rem;color:var(--tm);text-align:right;min-width:140px;"></div>
+  </div>
+
+  <div class="g2" style="margin-bottom:1rem;">
+    <!-- XP & Gold -->
+    <div class="card" style="border-color:rgba(16,185,129,.3);">
+      <div class="ct" style="color:var(--eml);">⚡ XP &amp; Gold</div>
+      <div style="font-size:.65rem;color:var(--eml);text-transform:uppercase;font-weight:700;margin-bottom:4px;">Quick XP (realistic scale)</div>
+      <div style="font-size:.65rem;color:var(--tm);margin-bottom:.5rem;">Participation=1 · Helpful=2 · Task=3 · Excellent=5 · Achievement=10 · Major=25</div>
+      <div class="xqr" id="xqadd"></div>
+      <div class="dv"></div>
+      <div class="fg" style="margin-bottom:.75rem;"><label class="fl">Custom XP</label>
+        <div style="display:flex;gap:6px;"><input type="number" class="fi" id="cxv" placeholder="e.g. 5" min="1" style="flex:1;"><button class="btn bem bsm" onclick="cxp(1)">+ Add</button><button class="btn bre bsm" onclick="cxp(-1)">− Remove</button></div></div>
+      <div class="dv"></div>
+      <div class="fg" style="margin-bottom:0;"><label class="fl">Award Gold 💰</label>
+        <div style="display:flex;gap:6px;"><input type="number" class="fi" id="gav" placeholder="50" min="1" style="flex:1;"><button class="btn bgo bsm" onclick="addGold()">+ Gold</button><button class="btn bre bsm" onclick="rmGold2()">− Gold</button></div></div>
+    </div>
+
+    <!-- Hero Points -->
+    <div class="card hp-card">
+      <div class="ct" style="color:var(--hpl);">⭐ Hero Points</div>
+      <div style="font-size:.68rem;color:var(--tm);margin-bottom:.5rem;">Hero Points are the classroom management currency. Students spend them in the Reward Shop.</div>
+      <div class="xqr" id="hpqadd"></div>
+      <div class="dv"></div>
+      <div class="fg" style="margin-bottom:0;"><label class="fl">Custom Hero Points</label>
+        <div style="display:flex;gap:6px;"><input type="number" class="fi" id="hpcv" placeholder="10" min="1" style="flex:1;"><button class="btn bhp bsm" onclick="addHP()">+ Award ⭐</button><button class="btn bre bsm" onclick="rmHP()">− Remove</button></div></div>
+    </div>
+  </div>
+
+  <!-- Resources & Boss Damage -->
+  <div class="g2" style="margin-bottom:1rem;">
+    <div class="card" style="border-color:rgba(220,38,38,.25);">
+      <div class="ct" style="color:#fca5a5;">🐉 Class Boss Damage</div>
+      <div style="font-size:.72rem;color:var(--tm);margin-bottom:.75rem;">Deal damage to the class boss for the whole class.</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button class="btn bsm bre" onclick="bossDmg(2)">Participation +2</button>
+        <button class="btn bsm bre" onclick="bossDmg(5)">Assignment +5</button>
+        <button class="btn bsm bre" onclick="bossDmg(10)">Perfect Quiz +10</button>
+        <button class="btn bsm bor" onclick="bossDmg(25)">⚡ Epic Effort +25</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ct">🏰 Add Kingdom Resources</div>
+      <div class="g2" style="gap:7px;" id="resinputs"></div>
+      <button class="btn bro bsm" style="width:100%;margin-top:8px;" onclick="addRes()">Add to Kingdom 🏰</button>
+    </div>
+  </div>
+
+  <!-- Achievements & Special Awards -->
+  <div class="g2" style="margin-bottom:1rem;">
+    <div class="card">
+      <div class="ct">🏅 Award Achievement</div>
+      <div class="g2" style="gap:8px;margin-bottom:8px;">
+        <div class="fg" style="margin:0;"><label class="fl">Category</label>
+          <select class="fs" id="accat"><option value="Caring">💗 Caring</option><option value="Thinker">🧠 Thinker</option><option value="Communicator">💬 Communicator</option><option value="Risk-Taker">🎯 Risk-Taker</option><option value="Inquirer">🔍 Inquirer</option></select></div>
+        <div class="fg" style="margin:0;"><label class="fl">Custom Name</label><input type="text" class="fi" id="acnm" placeholder="e.g. Dragon Slayer"></div>
+      </div>
+      <button class="btn bpu bsm" style="width:100%;" onclick="giveAch()">🏅 Award Achievement</button>
+    </div>
+    <div class="card" style="border-color:rgba(245,158,11,.3);">
+      <div class="ct" style="color:var(--go);">🎖 Special Award</div>
+      <div class="g2" style="gap:8px;margin-bottom:8px;">
+        <div class="fg" style="margin:0;"><label class="fl">Award Type</label>
+          <select class="fs" id="sptype">
+            <option value="Most Helpful Hero">🤝 Most Helpful Hero</option>
+            <option value="Teamwork Champion">🛡 Teamwork Champion</option>
+            <option value="Growth Mindset">🌱 Growth Mindset</option>
+            <option value="Perseverance">💪 Perseverance</option>
+            <option value="Classroom Leader">👑 Classroom Leader</option>
+          </select></div>
+        <div class="fg" style="margin:0;"><label class="fl">Note</label><input type="text" class="fi" id="spnote" placeholder="Why they earned it..."></div>
+      </div>
+      <button class="btn bgo bsm" style="width:100%;" onclick="giveSpecial()">🎖 Give Award</button>
+    </div>
+  </div>
+
+  <!-- Reward Queue -->
+  <div class="card hp-card" style="margin-bottom:1rem;">
+    <div class="ct" style="color:var(--hpl);">📋 Reward Request Queue</div>
+    <p style="font-size:.75rem;color:var(--tm);margin-bottom:.875rem;">Students request rewards from the shop. Approve, decline, or mark complete here.</p>
+    <div id="reward-queue"></div>
+  </div>
+
+  <!-- Positive Email Tracker -->
+  <div class="card" style="margin-bottom:1rem;border-color:rgba(59,130,246,.3);">
+    <div class="ct" style="color:#93c5fd;">📧 Positive Email Home</div>
+    <p style="font-size:.75rem;color:var(--tm);margin-bottom:.75rem;">Track positive emails sent home. Click to log an email for the active hero.</p>
+    <div style="display:flex;gap:8px;margin-bottom:.75rem;">
+      <button class="btn bro bsm" onclick="logEmail()">📧 Log Positive Email for Active Hero</button>
+    </div>
+    <div id="email-log"></div>
+  </div>
+
+  <!-- Create Quest -->
+  <div class="card" style="margin-bottom:1rem;border-color:rgba(124,58,237,.3);">
+    <div class="ct" style="color:var(--pul);">⭐ Create Custom Quest</div>
+    <div class="g2" style="gap:8px;margin-bottom:8px;">
+      <div class="fg" style="margin:0;"><label class="fl">Quest Title</label><input type="text" class="fi" id="cqt" placeholder="e.g. Science Project"></div>
+      <div class="fg" style="margin:0;"><label class="fl">Icon (emoji)</label><input type="text" class="fi" id="cqi" placeholder="🔥" maxlength="4" style="font-size:1.2rem;"></div>
+    </div>
+    <div class="fg"><label class="fl">Instructions</label><textarea class="fi" id="cqd" placeholder="What do students need to do?"></textarea></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:6px;margin-bottom:8px;">
+      <div class="fg" style="margin:0;"><label class="fl">XP</label><input type="number" class="fi" id="cqxp" placeholder="5" min="0"></div>
+      <div class="fg" style="margin:0;"><label class="fl">Gold</label><input type="number" class="fi" id="cqg" placeholder="10" min="0"></div>
+      <div class="fg" style="margin:0;"><label class="fl">⭐ HP</label><input type="number" class="fi" id="cqhp" placeholder="5" min="0"></div>
+      <div class="fg" style="margin:0;"><label class="fl">Resource</label>
+        <select class="fs" id="cqres"><option value="">None</option><option value="stone">🪨 Stone</option><option value="wood">🪵 Wood</option><option value="gold">💰 Gold</option><option value="knowledge">📚 Knowledge</option></select></div>
+      <div class="fg" style="margin:0;"><label class="fl">Amount</label><input type="number" class="fi" id="cqamt" placeholder="20" min="1"></div>
+    </div>
+    <button class="btn bpu bsm" style="width:100%;" onclick="publishQ()">⭐ Publish to Students</button>
+    <div id="cqlist" style="margin-top:.75rem;"></div>
+  </div>
+
+  <!-- Event Controls -->
+  <div class="card" style="margin-bottom:1rem;border-color:rgba(59,130,246,.3);">
+    <div class="ct" style="color:#93c5fd;">⚡ Event Controls</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:.75rem;">
+      <button class="btn bro bsm" onclick="forceEvent()">🎲 New Event</button>
+      <button class="btn bor bsm" onclick="openModal('m-cev')">✏️ Custom Event</button>
+      <button class="btn bem bsm" onclick="completeEvent()">✅ Complete Event</button>
+    </div>
+    <div id="evstatus" style="font-size:.78rem;color:var(--tm);"></div>
+  </div>
+
+  <div class="card"><div class="ct">📊 Class Overview</div><div id="ctable"></div></div>
+</div>
+
+</main>
+<!-- ══ MODALS ══ -->
+<div class="mo" id="m-pin" style="z-index:2000;">
+  <div class="mb" style="max-width:340px;text-align:center;">
+    <div style="font-size:2rem;margin-bottom:.4rem;" id="pico">🔐</div>
+    <div class="mt" style="justify-content:center;" id="ptitle">Teacher Access</div>
+    <p style="font-size:.8rem;color:var(--tm);margin-bottom:1.1rem;" id="psub">Enter your 4-digit PIN.</p>
+    <div style="display:flex;gap:10px;justify-content:center;margin-bottom:.875rem;">
+      <div class="pdot" id="pd0"></div><div class="pdot" id="pd1"></div><div class="pdot" id="pd2"></div><div class="pdot" id="pd3"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-width:200px;margin:0 auto .75rem;">
+      <button class="pkey" onclick="pk('1')">1</button><button class="pkey" onclick="pk('2')">2</button><button class="pkey" onclick="pk('3')">3</button>
+      <button class="pkey" onclick="pk('4')">4</button><button class="pkey" onclick="pk('5')">5</button><button class="pkey" onclick="pk('6')">6</button>
+      <button class="pkey" onclick="pk('7')">7</button><button class="pkey" onclick="pk('8')">8</button><button class="pkey" onclick="pk('9')">9</button>
+      <button class="pkey pcl" onclick="pc()">⌫</button><button class="pkey" onclick="pk('0')">0</button><button class="pkey pok" onclick="ps()">✓</button>
+    </div>
+    <p style="font-size:.65rem;color:var(--tm);" id="phint"></p>
+    <button class="btn bgh bsm" style="margin-top:.5rem;" onclick="closeModal('m-pin')">Cancel</button>
+  </div>
+</div>
+
+<div class="mo" id="m-addh">
+  <div class="mb"><button class="mc" onclick="closeModal('m-addh')">✕</button>
+    <div class="mt">⚔️ Enroll New Hero</div>
+    <div class="fg"><label class="fl">Hero Name</label><input type="text" class="fi" id="nsn" placeholder="Enter hero name..."></div>
+    <div class="fg"><label class="fl">Character Class</label>
+      <select class="fs" id="nsc">
+        <option value="Scholar">📚 Scholar</option><option value="Explorer">🧭 Explorer</option>
+        <option value="Inventor">⚙️ Inventor</option><option value="Builder">🏗️ Builder</option><option value="Historian">📜 Historian</option>
+      </select></div>
+    <div style="display:flex;gap:8px;margin-top:1rem;">
+      <button class="btn bgo" style="flex:1;" onclick="addHero()">Enroll Hero ⚔️</button>
+      <button class="btn bgh" onclick="closeModal('m-addh')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="mo" id="m-hd"><div class="mb" style="max-width:580px;"><button class="mc" onclick="closeModal('m-hd')">✕</button><div id="hdcont"></div></div></div>
+
+<div class="mo" id="m-contrib">
+  <div class="mb" style="max-width:540px;"><button class="mc" onclick="closeModal('m-contrib')">✕</button>
+    <div class="mt">🏗 Contribute &amp; Repair</div>
+    <p style="font-size:.78rem;color:var(--tm);margin-bottom:.875rem;">Build new structures or repair damaged ones using class resources.</p>
+    <div id="contriblist"></div>
+  </div>
+</div>
+
+<div class="mo" id="m-boss"><div class="mb" style="max-width:580px;background:linear-gradient(135deg,#0f001e,#1e000f);"><button class="mc" onclick="closeModal('m-boss')">✕</button><div id="bossarena"></div></div></div>
+
+<div class="mo" id="m-tierup">
+  <div class="mb" style="max-width:440px;text-align:center;background:linear-gradient(135deg,#1a0040,#0d2040);">
+    <button class="mc" onclick="closeModal('m-tierup')">✕</button>
+    <div style="font-size:3rem;margin-bottom:.4rem;" id="tuemo">🎉</div>
+    <div style="font-family:'MedievalSharp',serif;font-size:1.5rem;color:var(--go);margin-bottom:.4rem;" id="tutit">Tier Up!</div>
+    <div style="font-size:.82rem;color:var(--tm);margin-bottom:1rem;" id="tudesc"></div>
+    <div style="background:rgba(0,0,0,.3);border-radius:10px;padding:.875rem;margin-bottom:1rem;">
+      <div style="font-family:'MedievalSharp',serif;font-size:.82rem;color:var(--pul);margin-bottom:.5rem;">New Buildings Unlocked!</div>
+      <div id="tublds" style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;font-size:1.6rem;"></div>
+    </div>
+    <button class="btn bgo" style="width:100%;" onclick="closeModal('m-tierup')">Onwards! ⚔️</button>
+  </div>
+</div>
+
+<div class="mo" id="m-cev">
+  <div class="mb" style="max-width:480px;"><button class="mc" onclick="closeModal('m-cev')">✕</button>
+    <div class="mt">✏️ Create Custom Event</div>
+    <div class="fg"><label class="fl">Event Name</label><input type="text" class="fi" id="cen" placeholder="e.g. The Great Flood"></div>
+    <div class="fg"><label class="fl">Story Description</label><textarea class="fi" id="ced" placeholder="Describe the event..."></textarea></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+      <div class="fg" style="margin:0;"><label class="fl">Rarity</label>
+        <select class="fs" id="cer"><option value="common">Common</option><option value="rare">Rare</option><option value="epic">Epic</option></select></div>
+      <div class="fg" style="margin:0;"><label class="fl">Emoji</label><input type="text" class="fi" id="cee" placeholder="⚡" maxlength="4" style="font-size:1.2rem;"></div>
+    </div>
+    <div style="font-size:.68rem;color:var(--tm);margin-bottom:.4rem;font-weight:700;text-transform:uppercase;">Requirements</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-bottom:8px;">
+      <div class="fg" style="margin:0;"><label class="fl">🪨</label><input type="number" class="fi" id="ce-st" placeholder="0" min="0"></div>
+      <div class="fg" style="margin:0;"><label class="fl">🪵</label><input type="number" class="fi" id="ce-wd" placeholder="0" min="0"></div>
+      <div class="fg" style="margin:0;"><label class="fl">💰</label><input type="number" class="fi" id="ce-go" placeholder="0" min="0"></div>
+      <div class="fg" style="margin:0;"><label class="fl">📚</label><input type="number" class="fi" id="ce-kn" placeholder="0" min="0"></div>
+    </div>
+    <div style="font-size:.68rem;color:var(--tm);margin-bottom:.4rem;font-weight:700;text-transform:uppercase;">Completion Rewards</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px;">
+      <div class="fg" style="margin:0;"><label class="fl">XP to all heroes</label><input type="number" class="fi" id="ce-rxp" placeholder="50" min="0"></div>
+      <div class="fg" style="margin:0;"><label class="fl">Gold to kingdom</label><input type="number" class="fi" id="ce-rgo" placeholder="100" min="0"></div>
+    </div>
+    <button class="btn bro" style="width:100%;" onclick="activateCustEvent()">⚡ Activate Event</button>
+  </div>
+</div>
+
+<!-- Quest Reward Allocation Modal -->
+<div class="mo" id="m-alloc">
+  <div class="mb" style="max-width:460px;"><button class="mc" onclick="closeModal('m-alloc')">✕</button>
+    <div class="mt">⚖️ Allocate Your Rewards</div>
+    <p style="font-size:.78rem;color:var(--tm);margin-bottom:1rem;" id="alloc-desc"></p>
+    <div id="alloc-res-preview" style="margin-bottom:.875rem;"></div>
+    <div class="tax-banner">
+      🏛 <span id="alloc-tax-msg">20% automatically contributes to the Class Kingdom (Kingdom Tax)</span>
+    </div>
+    <div class="alloc-wrap">
+      <div class="alloc-labels">
+        <span style="color:var(--eml);">⚔️ Hero Kingdom: <b id="alloc-hero-pct">50%</b></span>
+        <span style="color:var(--pul);">🏰 Class Kingdom: <b id="alloc-class-pct">50%</b></span>
+      </div>
+      <div class="alloc-bar">
+        <div class="alloc-hero" id="alloc-bar-hero" style="width:50%;"></div>
+        <div class="alloc-class" id="alloc-bar-class" style="width:50%;"></div>
+      </div>
+      <div class="alloc-btns">
+        <button class="alloc-btn" onclick="setAlloc(100)">100% Hero</button>
+        <button class="alloc-btn" onclick="setAlloc(75)">75/25</button>
+        <button class="alloc-btn active" onclick="setAlloc(50)">50/50</button>
+        <button class="alloc-btn" onclick="setAlloc(25)">25/75</button>
+        <button class="alloc-btn" onclick="setAlloc(0)">100% Class</button>
+      </div>
+    </div>
+    <div id="alloc-split-preview" style="margin-bottom:1rem;font-size:.75rem;color:var(--tm);"></div>
+    <button class="btn bgo" style="width:100%;" id="alloc-confirm-btn">✅ Confirm &amp; Claim Rewards</button>
+  </div>
+</div>
+
+<!-- Hero Kingdom Build Modal -->
+<div class="mo" id="m-hkbuild">
+  <div class="mb"><button class="mc" onclick="closeModal('m-hkbuild')">✕</button>
+    <div class="mt" id="hkb-title">🏗 Build</div>
+    <div id="hkb-content"></div>
+  </div>
+</div>
+<script>
+// ═══════════════════════════════════════════════════════════
+//  KINGDOM BUILDER v3 — COMPLETE JAVASCRIPT
+//  New in v3: Hero Kingdom, Hero Points, Reward Shop,
+//  Resource Allocation, Kingdom Tax, Class Unlock System
+// ═══════════════════════════════════════════════════════════
+
+// ── LEVEL SYSTEM (realistic classroom scale) ──
+const LVL=[0,25,60,110,180,275,400,560,760,1000,1300,1660,2080,2570,3140,3800,4560,5430,6420,7540,8800];
+function getLv(xp){for(let i=LVL.length-1;i>=0;i--)if(xp>=LVL[i])return i+1;return 1;}
+function xpNext(xp){const lv=getLv(xp);if(lv>=LVL.length)return{c:xp,n:0,p:100};const b=LVL[lv-1],nx=LVL[lv];return{c:xp-b,n:nx-b,p:Math.round(((xp-b)/(nx-b))*100)};}
+
+// ── CLASS AVATARS & CONSTANTS ──
+const CA={Scholar:{e:'📚',c:'rgba(59,130,246,.3)'},Explorer:{e:'🧭',c:'rgba(16,185,129,.3)'},Inventor:{e:'⚙️',c:'rgba(245,158,11,.3)'},Builder:{e:'🏗️',c:'rgba(239,68,68,.3)'},Historian:{e:'📜',c:'rgba(124,58,237,.3)'}};
+const CE_MAP={Caring:'💗',Thinker:'🧠',Communicator:'💬','Risk-Taker':'🎯',Inquirer:'🔍'};
+const RES_IC={stone:'🪨',wood:'🪵',gold:'💰',knowledge:'📚'};
+
+// ── KINGDOM TAX RATE ──
+const TAX_RATE = 0.20; // 20% auto-goes to class kingdom
+
+// ── CLASS KINGDOM BUILDINGS (Tiers 1-4) ──
+const TB={
+  1:[
+    {id:'castle',n:'Castle',e:'🏰',p:{top:'30%',left:'38%'},r:{stone:200,gold:150}},
+    {id:'library',n:'Library',e:'📚',p:{top:'18%',left:'65%'},r:{wood:100,knowledge:200}},
+    {id:'market',n:'Marketplace',e:'🏪',p:{top:'66%',left:'56%'},r:{gold:300,wood:100}},
+  ],
+  2:[
+    {id:'harbor',n:'Harbor',e:'⚓',p:{top:'62%',left:'14%'},r:{wood:150,stone:80}},
+    {id:'university',n:'University',e:'🎓',p:{top:'15%',left:'72%'},r:{knowledge:500,gold:300}},
+    {id:'arena',n:'Arena',e:'🏟',p:{top:'65%',left:'48%'},r:{stone:350,gold:250}},
+  ],
+  3:[
+    {id:'palace',n:'Palace',e:'🏯',p:{top:'30%',left:'58%'},r:{stone:500,gold:500,knowledge:200}},
+    {id:'hallheroes',n:'Hall of Heroes',e:'🏛',p:{top:'72%',left:'68%'},r:{knowledge:800,gold:600}},
+    {id:'dragonacad',n:'Dragon Academy',e:'🐉',p:{top:'25%',left:'30%'},r:{knowledge:600,gold:400}},
+  ],
+  4:[
+    {id:'skyfort',n:'Sky Fortress',e:'🏰',p:{top:'8%',left:'50%'},r:{stone:800,gold:700,knowledge:300}},
+    {id:'grandarch',n:'Grand Archives',e:'📜',p:{top:'55%',left:'25%'},r:{knowledge:1000,gold:500}},
+    {id:'royalobs',n:'Royal Observatory',e:'🔭',p:{top:'72%',left:'40%'},r:{knowledge:700,gold:600,stone:200}},
+  ]
+};
+
+// ── CLASS UNLOCK MILESTONES (real classroom rewards) ──
+const UNLOCKS=[
+  {tier:1,emoji:'🍿',name:'Movie Afternoon Vote',desc:'Class votes on a short movie or video to watch together!',resNeeded:{gold:500,stone:200}},
+  {tier:2,emoji:'🎮',name:'Educational Game Session',desc:'30 minutes of your favourite educational games!',resNeeded:{knowledge:500,wood:300}},
+  {tier:3,emoji:'🍪',name:'Snack Celebration',desc:'Bring a snack to class day — everyone celebrates!',resNeeded:{gold:1000,knowledge:800}},
+  {tier:4,emoji:'🎉',name:'Kingdom Festival Day',desc:'A full afternoon of kingdom-themed activities and games!',resNeeded:{gold:2000,stone:1000,knowledge:1000}},
+  {tier:5,emoji:'👑',name:'Royal Feast',desc:'The ultimate celebration — a classroom feast fit for royalty!',resNeeded:{gold:3000,stone:2000,knowledge:2000,wood:1500}},
+];
+
+// ── HERO KINGDOM BUILDINGS (personal) ──
+const HK_BUILDINGS=[
+  {id:'cottage',n:'Cottage',e:'🏡',cost:{gold:30,wood:20},desc:'A cozy home for your hero.'},
+  {id:'farm',n:'Farm',e:'🌾',cost:{gold:50,stone:20,wood:30},desc:'Grow food for your kingdom.'},
+  {id:'workshop',n:'Workshop',e:'⚒️',cost:{gold:80,stone:40},desc:'Craft useful tools and items.'},
+  {id:'hklibrary',n:'Library',e:'📚',cost:{gold:100,knowledge:50},desc:'A place of great learning.'},
+  {id:'watchtower',n:'Watchtower',e:'🗼',cost:{gold:120,stone:80},desc:'Watch over your lands.'},
+  {id:'castle',n:'Castle',e:'🏰',cost:{gold:200,stone:150,wood:100},desc:'A grand fortress for a great hero.'},
+  {id:'wizardtower',n:'Wizard Tower',e:'🧙',cost:{gold:250,knowledge:150},desc:'Channel arcane knowledge.'},
+  {id:'dragonroost',n:'Dragon Roost',e:'🐉',cost:{gold:400,stone:200,knowledge:200},desc:'A legendary structure for legendary heroes.'},
+];
+
+// ── HERO TITLES (unlocked at certain levels) ──
+const HK_TITLES=[
+  {level:1,title:'Novice Adventurer'},{level:3,title:'Apprentice Builder'},
+  {level:5,title:'Knight of Knowledge'},{level:7,title:'Kingdom Champion'},
+  {level:9,title:'Master Explorer'},{level:12,title:'Royal Architect'},
+  {level:15,title:'Dragon Rider'},{level:20,title:'Legendary Sovereign'},
+];
+function getTitle(lv){let t=HK_TITLES[0];for(const x of HK_TITLES){if(lv>=x.level)t=x;}return t.title;}
+
+// ── PETS & COSMETICS (personal hero shop) ──
+const HK_COSMETICS=[
+  {id:'owl',n:'Owl',e:'🦉',type:'pet',cost:{gold:50}},
+  {id:'fox',n:'Fox',e:'🦊',type:'pet',cost:{gold:60}},
+  {id:'wolf',n:'Wolf',e:'🐺',type:'pet',cost:{gold:80}},
+  {id:'dragon',n:'Dragon Hatchling',e:'🐲',type:'pet',cost:{gold:200,knowledge:100}},
+  {id:'phoenix',n:'Phoenix',e:'🔥',type:'pet',cost:{gold:300,knowledge:150}},
+  {id:'griffin',n:'Griffin',e:'🦅',type:'pet',cost:{gold:250,stone:100}},
+  {id:'flag',n:'Victory Flag',e:'🚩',type:'deco',cost:{gold:30}},
+  {id:'fountain',n:'Fountain',e:'⛲',type:'deco',cost:{gold:60,stone:40}},
+  {id:'garden',n:'Royal Garden',e:'🌳',type:'deco',cost:{gold:80,wood:50}},
+  {id:'statue',n:'Hero Statue',e:'🗿',type:'deco',cost:{gold:120,stone:80}},
+  {id:'banner',n:'Kingdom Banner',e:'🏴',type:'deco',cost:{gold:40}},
+];
+
+// ── REWARD SHOP ITEMS (Hero Points only) ──
+const SHOP_ITEMS=[
+  {id:'sh1',icon:'🪑',name:'Choose Seating Partner',desc:'Choose who you sit next to for the day.',cost:20},
+  {id:'sh2',icon:'🎮',name:'10 Min Choice Time',desc:'10 minutes of independent choice activity.',cost:30},
+  {id:'sh3',icon:'🌅',name:'Morning Meeting Activity',desc:'You choose the morning meeting activity.',cost:40},
+  {id:'sh4',icon:'📧',name:'Positive Email Home',desc:'Your teacher sends a positive email to your family!',cost:50},
+  {id:'sh5',icon:'🪑',name:'Seating Partner for a Week',desc:'Choose your seating partner for a whole week.',cost:60},
+  {id:'sh6',icon:'🍽',name:'Early Lunch',desc:'Be first in line for lunch tomorrow.',cost:75},
+  {id:'sh7',icon:'🦸',name:'Class Assistant for the Day',desc:'Be the teacher\'s special assistant all day.',cost:90},
+  {id:'sh8',icon:'🎤',name:'Lead a Brain Break',desc:'Choose and lead the next class brain break!',cost:110},
+];
+
+// ── EVENTS POOL ──
+const EP={
+  common:[
+    {id:'flood',n:'Great Flood',e:'🌊',rarity:'common',desc:'Heavy rains flooded the harbor! Build flood barriers.',req:{wood:40,stone:20},reward:{gold:100,xpAll:50},impact:{harbor:-20}},
+    {id:'drought',n:'Dry Season',e:'☀️',rarity:'common',desc:'The farms are struggling. Dig new wells!',req:{stone:30,gold:50},reward:{gold:80,xpAll:30},impact:{farms:-15}},
+    {id:'bandits',n:'Bandit Raid',e:'⚔️',rarity:'common',desc:'Bandits attacked the marketplace! Repair the damage.',req:{wood:30,gold:80},reward:{gold:120,xpAll:40},impact:{market:-25}},
+    {id:'supplies',n:'Missing Supplies',e:'📦',rarity:'common',desc:'A supply wagon has vanished. Gather emergency resources!',req:{gold:60,knowledge:20},reward:{gold:90,xpAll:35},impact:{}},
+    {id:'goblins',n:'Goblin Mischief',e:'👺',rarity:'common',desc:'Goblins stole tools from the forge! Craft replacements.',req:{stone:25,wood:25},reward:{gold:75,xpAll:30},impact:{castle:-10}},
+  ],
+  rare:[
+    {id:'dragon',n:'Dragon Attack',e:'🐉',rarity:'rare',desc:'A dragon attacked the castle! Emergency repairs needed!',req:{stone:100,gold:150},reward:{gold:250,xpAll:100},impact:{castle:-40}},
+    {id:'quake',n:'Earthquake',e:'🌍',rarity:'rare',desc:'A tremor shook the kingdom! Multiple buildings damaged.',req:{stone:80,wood:60},reward:{gold:200,xpAll:80},impact:{castle:-20,harbor:-20}},
+    {id:'inspection',n:'Royal Inspection',e:'👑',rarity:'rare',desc:'The Royal Inspector is visiting! Make the kingdom shine.',req:{gold:100,knowledge:50},reward:{gold:300,xpAll:120},impact:{}},
+    {id:'pirates',n:'Pirate Blockade',e:'🏴‍☠️',rarity:'rare',desc:'Pirates blockaded the harbor! Fight them off!',req:{wood:80,gold:100},reward:{gold:280,xpAll:100},impact:{harbor:-35}},
+    {id:'fire',n:'Castle Fire',e:'🔥',rarity:'rare',desc:'Fire in the castle! Everyone must help douse the flames!',req:{stone:70,wood:50},reward:{gold:200,xpAll:90},impact:{castle:-45}},
+  ],
+  epic:[
+    {id:'prophecy',n:'Ancient Prophecy',e:'📜',rarity:'epic',desc:'An ancient prophecy awakens! Knowledge and bravery will fulfill it.',req:{knowledge:150,gold:200,stone:100},reward:{gold:500,xpAll:200},impact:{}},
+    {id:'eclipse',n:'The Great Eclipse',e:'🌑',rarity:'epic',desc:'The sun is dark! The Observatory must guide the kingdom.',req:{knowledge:200,gold:150},reward:{gold:450,xpAll:180},impact:{royalobs:-20}},
+    {id:'wizcrisis',n:'Wizard Crisis',e:'🧙',rarity:'epic',desc:'The kingdom wizard lost his memory! Gather knowledge to help.',req:{knowledge:300,gold:100},reward:{gold:600,xpAll:250},impact:{library:-30}},
+    {id:'lostciv',n:'Lost Civilization',e:'🗺️',rarity:'epic',desc:'Explorers found ancient ruins! Study them and bring back treasure.',req:{knowledge:250,stone:80,gold:120},reward:{gold:700,xpAll:300},impact:{}},
+  ]
+};
+
+const BD=[
+  {id:'b1',n:'Dragon of Fractions',e:'🐉',desc:'A beast who roars only in mathematics.',hp:500,maxHp:500,xpR:80,goldR:40,res:{knowledge:60}},
+  {id:'b2',n:'Grammar Goblin King',e:'👺',desc:'Tiny but terrible — scrambles words!',hp:300,maxHp:300,xpR:50,goldR:25,res:{knowledge:40}},
+  {id:'b3',n:'Volcano Titan',e:'🌋',desc:'Ancient guardian of the molten mountains.',hp:600,maxHp:600,xpR:100,goldR:50,res:{stone:80}},
+  {id:'b4',n:'Kraken of Geography',e:'🐙',desc:'Sea monster guarding ancient maps.',hp:450,maxHp:450,xpR:120,goldR:60,res:{wood:100}},
+  {id:'b5',n:'Time-Travel Pharaoh',e:'🏺',desc:'Ancient ruler lost in time.',hp:800,maxHp:800,xpR:150,goldR:80,res:{knowledge:120}},
+];
+
+const QB=[
+  {id:'q1',t:'Reading Quest',i:'📖',d:'Read 20 minutes and summarize what you learned.',r:{xp:3,gold:10,hp:2,res:'knowledge',amt:20}},
+  {id:'q2',t:'Math Quest',i:'🔢',d:'Complete 10 math problems without errors.',r:{xp:5,gold:15,hp:3,res:'stone',amt:20}},
+  {id:'q3',t:'Geography Quest',i:'🌍',d:'Label 5 countries on a map from memory.',r:{xp:3,gold:10,hp:2,res:'knowledge',amt:20}},
+  {id:'q4',t:'Science Quest',i:'🔬',d:'Describe the life cycle of a plant with diagrams.',r:{xp:5,gold:20,hp:3,res:'wood',amt:20}},
+  {id:'q5',t:'Kindness Quest',i:'💗',d:'Do something kind for a classmate.',r:{xp:2,gold:10,hp:5}},
+  {id:'q6',t:'Art Quest',i:'🎨',d:'Create artwork representing your kingdom character.',r:{xp:3,gold:15,hp:2,res:'wood',amt:20}},
+  {id:'q7',t:'History Quest',i:'📜',d:'Research a historical event and present 3 key facts.',r:{xp:5,gold:15,hp:3,res:'knowledge',amt:20}},
+  {id:'q8',t:'Code Quest',i:'💻',d:'Complete a 10-minute coding activity.',r:{xp:5,gold:20,hp:3,res:'stone',amt:20}},
+  {id:'q9',t:'Writing Quest',i:'✍️',d:'Write a short story set in our kingdom world.',r:{xp:5,gold:20,hp:3,res:'knowledge',amt:20}},
+];
+
+// ═══════════════════════════════════════
+//  DATA LAYER — localStorage with v3 migration
+// ═══════════════════════════════════════
+const gls=k=>localStorage.getItem(k);
+const sls=(k,v)=>localStorage.setItem(k,v);
+
+function ld(){
+  // Load v3 data; migrate from v2 if needed
+  const raw=gls('k3_students');
+  let students=raw?JSON.parse(raw):null;
+
+  // MIGRATION: If no v3 data but v2 data exists, migrate it
+  if(!students){
+    const v2=gls('k2_s');
+    if(v2){
+      const old=JSON.parse(v2);
+      students=old.map(s=>migrate_student(s));
+      sls('k3_migrated','1');
+    } else {
+      students=[];
+    }
+  }
+
+  // Load class kingdom (migrate from v2 if needed)
+  let kingdom=JSON.parse(gls('k3_k')||'null');
+  if(!kingdom){
+    const v2k=gls('k2_k');
+    kingdom=v2k?JSON.parse(v2k):{res:{stone:0,wood:0,gold:0,knowledge:0},buildings:{},treasury:0,tier:1};
+    kingdom.unlockProgress=kingdom.unlockProgress||{stone:0,wood:0,gold:0,knowledge:0};
+  }
+  if(!kingdom.unlockProgress)kingdom.unlockProgress={stone:0,wood:0,gold:0,knowledge:0};
+
+  return{
+    students,
+    kingdom,
+    quests:JSON.parse(gls('k3_q')||'{}'),
+    bosses:JSON.parse(gls('k3_b')||'{}'),
+    customQ:JSON.parse(gls('k3_cq')||'[]'),
+    event:JSON.parse(gls('k3_ev')||'null'),
+    awards:JSON.parse(gls('k3_aw')||'[]'),
+    hof:JSON.parse(gls('k3_hof')||'[]'),
+    rewardQueue:JSON.parse(gls('k3_rq')||'[]'),
+    emailLog:JSON.parse(gls('k3_el')||'[]'),
+    lastLogin:gls('k3_ll')||'',
+    streak:parseInt(gls('k3_str')||'0'),
+    weekXP:JSON.parse(gls('k3_wxp')||'{}'),
+    lastWkXP:JSON.parse(gls('k3_lwxp')||'{}'),
+    lastAwardWk:gls('k3_law')||'',
+    cbossId:gls('k3_cbid')||'b1',
+    cbossHP:parseInt(gls('k3_cbhp')||'0'),
+    dailyClaimed:gls('k3_dc')===getTodayKey(),
+    allocPct:parseInt(gls('k3_alloc')||'50'), // hero % default 50
+    pin:gls('k3_pin')||'', // teacher PIN (now synced across devices via the cloud)
+  };
+}
+
+// Migrate a v2 student to v3 format
+function migrate_student(s){
+  return{
+    name:s.name,cls:s.cls,
+    xp:s.xp||0,gold:s.gold||0,
+    heroPoints:s.heroPoints||0,  // NEW: Hero Points
+    achievements:s.achievements||[],
+    weeklyQ:s.weeklyQ||0,weeklyRes:s.weeklyRes||0,weeklyHelp:s.weeklyHelp||0,
+    // Personal kingdom resources
+    pkRes:{stone:Math.floor((s.xp||0)/10),wood:Math.floor((s.xp||0)/10),gold:Math.floor((s.gold||0)*0.2),knowledge:Math.floor((s.xp||0)/8)},
+    // Personal kingdom buildings owned
+    pkBuildings:[],
+    pkCosmetics:[],
+    pkTitle:'Novice Adventurer',
+  };
+}
+
+// Save to this device's local storage only (no cloud push). Used for the
+// instant offline copy and when applying an incoming cloud update.
+function svLocal(D){
+  sls('k3_students',JSON.stringify(D.students));
+  sls('k3_k',JSON.stringify(D.kingdom));
+  sls('k3_q',JSON.stringify(D.quests));
+  sls('k3_b',JSON.stringify(D.bosses));
+  sls('k3_cq',JSON.stringify(D.customQ));
+  sls('k3_ev',JSON.stringify(D.event));
+  sls('k3_aw',JSON.stringify(D.awards));
+  sls('k3_hof',JSON.stringify(D.hof));
+  sls('k3_rq',JSON.stringify(D.rewardQueue));
+  sls('k3_el',JSON.stringify(D.emailLog));
+  sls('k3_ll',D.lastLogin);sls('k3_str',D.streak);
+  sls('k3_wxp',JSON.stringify(D.weekXP));sls('k3_lwxp',JSON.stringify(D.lastWkXP));
+  sls('k3_law',D.lastAwardWk);sls('k3_cbid',D.cbossId);sls('k3_cbhp',D.cbossHP);
+  if(D.dailyClaimed)sls('k3_dc',getTodayKey());
+  sls('k3_alloc',D.allocPct);
+  if(D.pin!==undefined)sls('k3_pin',D.pin||'');
+}
+// Save locally AND push the whole shared state to the cloud so other devices update.
+function sv(D){
+  svLocal(D);
+  if(window.__cloudSave)window.__cloudSave(cloudState());
+}
+// The slice of state we keep in the shared cloud document.
+function cloudState(){
+  return{
+    students:D.students,kingdom:D.kingdom,quests:D.quests,bosses:D.bosses,
+    customQ:D.customQ,event:D.event,awards:D.awards,hof:D.hof,
+    rewardQueue:D.rewardQueue,emailLog:D.emailLog,weekXP:D.weekXP,lastWkXP:D.lastWkXP,
+    lastAwardWk:D.lastAwardWk,cbossId:D.cbossId,cbossHP:D.cbossHP,allocPct:D.allocPct,
+    pin:D.pin||'',
+  };
+}
+// Called by the Firebase layer when another device changes the shared data.
+window.applyCloudState=function(obj){
+  try{
+    if(!obj)return;
+    Object.keys(obj).forEach(k=>{D[k]=obj[k];});
+    svLocal(D);                       // keep this device's offline copy current
+    const ap=document.querySelector('.page.active');
+    if(ap)rPage(ap.id.replace('page-',''));
+    if(typeof updTSels==='function')updTSels();
+  }catch(e){console.warn('applyCloudState failed',e);}
+};
+window.__getCloudState=cloudState;    // lets the Firebase layer seed an empty cloud
+
+let D=ld();
+
+// ═══════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════
+function getWkKey(){const d=new Date(),j=new Date(d.getFullYear(),0,1);return d.getFullYear()+'W'+Math.ceil((((d-j)/86400000)+j.getDay()+1)/7);}
+function getTodayKey(){const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
+function getDow(){return new Date().getDay();}
+function getAllB(){const t=D.kingdom.tier||1;let a=[];for(let i=1;i<=t;i++)a=[...a,...(TB[i]||[])];return a;}
+
+// ═══════════════════════════════════════
+//  NAV & PIN
+// ═══════════════════════════════════════
+let pinBuf='',pinMode='unlock',tOpen=false,pendingTeacherAction=null;
+// Require the teacher PIN before running a protected action (e.g. enrolling or removing a hero).
+// If the teacher is already unlocked this session, the action runs immediately.
+function requireTeacher(action){
+  if(tOpen){action();return;}
+  pendingTeacherAction=action;
+  const hasPin=D.pin;
+  if(hasPin){
+    pinMode='gate';
+    document.getElementById('pico').textContent='🔐';
+    document.getElementById('ptitle').textContent='Teacher Approval Needed';
+    document.getElementById('psub').textContent='Enter the teacher PIN to continue.';
+  }else{
+    pinMode='gatesetup';
+    document.getElementById('pico').textContent='🔑';
+    document.getElementById('ptitle').textContent='Set Teacher PIN';
+    document.getElementById('psub').textContent='Create a secret 4-digit PIN to protect heroes.';
+  }
+  pinBuf='';updPD();document.getElementById('phint').textContent='';openModal('m-pin');
+}
+function runPendingTeacher(){const a=pendingTeacherAction;pendingTeacherAction=null;if(typeof a==='function')a();}
+function nav(id,e){
+  if(id!=='teacher'&&tOpen){tOpen=false;document.getElementById('ttab').textContent='🔒 Teacher';}
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nt').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  const ev=e||event;if(ev&&ev.target)ev.target.classList.add('active');
+  rPage(id);
+}
+function teacherClick(e){
+  if(tOpen){nav('teacher',e);return;}
+  const sv2=D.pin;
+  if(!sv2){pinMode='setup';document.getElementById('pico').textContent='🔑';document.getElementById('ptitle').textContent='Set Teacher PIN';document.getElementById('psub').textContent='Create a secret 4-digit PIN!';}
+  else{pinMode='unlock';document.getElementById('pico').textContent='🔐';document.getElementById('ptitle').textContent='Teacher Access';document.getElementById('psub').textContent='Enter your 4-digit PIN.';}
+  pinBuf='';updPD();document.getElementById('phint').textContent='';openModal('m-pin');
+}
+function pk(d){if(pinBuf.length>=4)return;pinBuf+=d;updPD();if(pinBuf.length===4)setTimeout(ps,180);}
+function pc(){pinBuf=pinBuf.slice(0,-1);updPD();}
+function updPD(st){for(let i=0;i<4;i++){const d=document.getElementById('pd'+i);d.className='pdot';if(st==='e')d.classList.add('e');else if(i<pinBuf.length)d.classList.add('f');}}
+function ps(){
+  if(pinBuf.length<4){document.getElementById('phint').textContent='Enter all 4 digits.';return;}
+  const saved=D.pin;
+  if(pinMode==='setup'){D.pin=pinBuf;sv(D);tOpen=true;closeModal('m-pin');document.getElementById('ttab').textContent='🎓 Teacher';toast('🔑 PIN set!');nav('teacher',{target:document.getElementById('ttab')});}
+  else if(pinMode==='gatesetup'){D.pin=pinBuf;sv(D);tOpen=true;closeModal('m-pin');document.getElementById('ttab').textContent='🎓 Teacher';toast('🔑 Teacher PIN set!');runPendingTeacher();}
+  else if(pinMode==='gate'){
+    if(pinBuf===saved){tOpen=true;closeModal('m-pin');document.getElementById('ttab').textContent='🎓 Teacher';runPendingTeacher();}
+    else{pinBuf='';updPD('e');document.getElementById('phint').textContent='❌ Wrong PIN.';setTimeout(()=>updPD(),600);}
+  }
+  else if(pinBuf===saved){tOpen=true;closeModal('m-pin');document.getElementById('ttab').textContent='🎓 Teacher';nav('teacher',{target:document.getElementById('ttab')});}
+  else{pinBuf='';updPD('e');document.getElementById('phint').textContent='❌ Wrong PIN.';setTimeout(()=>updPD(),600);}
+}
+function rPage(id){
+  const m={classkingdom:rClassKingdom,herokingdom:rHeroKingdom,heroes:rHeroes,events:rEvents,quests:rQuests,bosses:rBosses,awards:rAwards,shop:rShop,teacher:rTeacher};
+  if(m[id])m[id]();
+}
+
+// ═══════════════════════════════════════
+//  AUTO SYSTEMS
+// ═══════════════════════════════════════
+function autoRun(){checkLogin();checkEvent();checkAwards();}
+function checkLogin(){
+  const today=getTodayKey();if(D.lastLogin===today)return;
+  const y=new Date();y.setDate(y.getDate()-1);const yk=y.getFullYear()+'-'+(y.getMonth()+1)+'-'+y.getDate();
+  D.streak=D.lastLogin===yk?(D.streak||0)+1:1;D.lastLogin=today;sv(D);
+}
+function checkEvent(){const wk=getWkKey();if(!D.event||D.event.weekKey!==wk){if(getDow()>=1)genEvent(wk);}}
+function genEvent(wk){
+  const r=Math.random();const pool=r<0.6?EP.common:r<0.9?EP.rare:EP.epic;
+  const ev=pool[Math.floor(Math.random()*pool.length)];
+  D.event={...ev,weekKey:wk,completed:false,progress:{stone:0,wood:0,gold:0,knowledge:0}};
+  applyImpact(ev.impact||{});sv(D);
+}
+function applyImpact(imp){
+  Object.entries(imp).forEach(([bid,dmg])=>{
+    if(!D.kingdom.buildings[bid])D.kingdom.buildings[bid]={spent:{},dur:100};
+    const b=D.kingdom.buildings[bid];if(b.dur===undefined)b.dur=100;
+    const bDef=getAllB().find(x=>x.id===bid);if(!bDef)return;
+    const tS=Object.values(b.spent||{}).reduce((a,c)=>a+c,0);
+    const tR=Object.values(bDef.r).reduce((a,c)=>a+c,0);
+    if(Math.min(100,Math.round(tS/tR*100))>=100)b.dur=Math.max(0,(b.dur||100)+dmg);
+  });
+}
+function checkAwards(){
+  if(getDow()<5||D.lastAwardWk===getWkKey())return;
+  if(!D.students||D.students.length<2)return;
+  const awards=calcAutoAwards();if(!awards.length)return;
+  D.lastAwardWk=getWkKey();
+  D.hof=[...awards.map(a=>({...a,wk:getWkKey(),date:new Date().toLocaleDateString()})),...(D.hof||[])].slice(0,100);
+  D.lastWkXP={...D.weekXP};D.weekXP={};
+  D.students.forEach(s=>{s.weeklyQ=0;s.weeklyRes=0;s.weeklyHelp=0;});sv(D);
+}
+function calcAutoAwards(){
+  if(!D.students||D.students.length<2)return[];
+  const wx=D.weekXP||{},lw=D.lastWkXP||{};const awards=[];
+  const xc=D.students.reduce((a,s)=>(wx[s.name]||0)>(wx[a.name]||0)?s:a,D.students[0]);
+  awards.push({type:'Quest Master',icon:'📜',winner:xc.name,note:'Most XP this week'});
+  let bi=null,bp=0;D.students.forEach(s=>{const n=wx[s.name]||0,p=lw[s.name]||1;const pct=p>0?((n-p)/p)*100:n>0?100:0;if(pct>bp){bp=pct;bi=s;}});
+  if(bi)awards.push({type:'Most Improved',icon:'📈',winner:bi.name,note:`+${Math.round(bp)}% growth`});
+  const rc=D.students.reduce((a,s)=>(s.weeklyRes||0)>(a.weeklyRes||0)?s:a,D.students[0]);
+  if(rc.weeklyRes>0)awards.push({type:'Resource Collector',icon:'⛏️',winner:rc.name,note:'Most resources gathered'});
+  const hc=D.students.reduce((a,s)=>(s.weeklyHelp||0)>(a.weeklyHelp||0)?s:a,D.students[0]);
+  if(hc.weeklyHelp>0)awards.push({type:'Most Helpful',icon:'🤝',winner:hc.name,note:'Most helpful actions'});
+  return awards;
+}
+function getEvTimer(){
+  const now=new Date(),fri=new Date(now);fri.setDate(fri.getDate()+(5-now.getDay()+7)%7);fri.setHours(15,0,0,0);
+  const diff=fri-now;if(diff<=0)return'Ends today!';
+  const d=Math.floor(diff/86400000),h=Math.floor((diff%86400000)/3600000);return`${d}d ${h}h left`;
+}
+
+// ═══════════════════════════════════════
+//  CLASS KINGDOM PAGE
+// ═══════════════════════════════════════
+function rClassKingdom(){rTierBdg();rResDsp();rKMap();rLB('xp');rAchGal();rWkProg();rDailyBonus();rEvMini();rUnlockTracker();}
+
+function rTierBdg(){
+  const t=D.kingdom.tier||1,b=document.getElementById('ktbdg'),ml=document.getElementById('maptlbl');
+  const nm={1:'The Founding',2:'The Expanding Realm',3:'The Grand Empire',4:'The Legendary Age'};
+  const cl={1:'t1',2:'t2',3:'t3',4:'t3'};const st={1:'⭐',2:'🌟',3:'👑',4:'💎'};
+  if(b){b.className='tbdg '+cl[t];b.textContent=`${st[t]} Tier ${t}`;}
+  if(ml)ml.textContent=`Tier ${t}: ${nm[t]||'Age of Legends'}`;
+}
+
+function rResDsp(){
+  const r=D.kingdom.res||{};
+  document.getElementById('resdisplay').innerHTML=Object.entries(r).map(([k,v])=>
+    `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:rgba(0,0,0,.2);border-radius:7px;border:1px solid rgba(255,255,255,.05);margin-bottom:5px;">
+      <span style="font-size:1.1rem;">${RES_IC[k]||k}</span>
+      <span style="flex:1;font-weight:700;font-size:.78rem;">${k.charAt(0).toUpperCase()+k.slice(1)}</span>
+      <span style="font-family:'Orbitron',monospace;font-size:.78rem;color:var(--go);">${v}</span>
+    </div>`).join('');
+}
+
+function rKMap(){
+  const map=document.getElementById('kmap');map.querySelectorAll('.bs').forEach(e=>e.remove());
+  getAllB().forEach(b=>{
+    const bd=D.kingdom.buildings[b.id]||{spent:{},dur:100};
+    const tR=Object.values(b.r).reduce((a,c)=>a+c,0);
+    const tS=Object.values(bd.spent||{}).reduce((a,c)=>a+c,0);
+    const pct=Math.min(100,Math.round(tS/tR*100));const dur=bd.dur===undefined?100:bd.dur;
+    const built=pct>=100;const dc=dur>70?'var(--em)':dur>40?'var(--go)':'var(--cr)';
+    const el=document.createElement('div');el.className='bs';Object.assign(el.style,b.p);
+    el.innerHTML=`<span class="bi" style="${built?'':'filter:grayscale(.8) opacity(.4);'}">${b.e}</span>
+      <div class="bl" style="color:${built?'var(--gol)':'var(--tm)'}">${b.n}</div>
+      <div class="bpw"><div class="bpf" style="width:${pct}%"></div></div>
+      ${built?`<div class="bdw"><div class="bdf" style="width:${dur}%;background:${dc};"></div></div>`:''}`;
+    el.onclick=()=>openContribute();map.appendChild(el);
+  });
+}
+
+let lbCat='xp';
+function rLB(cat){
+  const el=document.getElementById('lblist');
+  if(!D.students||!D.students.length){el.innerHTML='<p style="color:var(--tm);font-size:.8rem;text-align:center;padding:.875rem;">No heroes yet.</p>';return;}
+  let s=[...D.students];const lw=D.lastWkXP||{};
+  if(cat==='xp')s.sort((a,b)=>b.xp-a.xp);
+  else if(cat==='hp')s.sort((a,b)=>(b.heroPoints||0)-(a.heroPoints||0));
+  else if(cat==='helpful')s.sort((a,b)=>(b.weeklyHelp||0)-(a.weeklyHelp||0));
+  else if(cat==='quests')s.sort((a,b)=>(b.weeklyQ||0)-(a.weeklyQ||0));
+  else if(cat==='improved')s.sort((a,b)=>(b.xp-(lw[b.name]||0))-(a.xp-(lw[a.name]||0)));
+  s=s.slice(0,8);
+  el.innerHTML=s.map((s,i)=>{
+    let v=cat==='xp'?s.xp+' XP':cat==='hp'?(s.heroPoints||0)+' ⭐':cat==='helpful'?(s.weeklyHelp||0)+' acts':cat==='quests'?(s.weeklyQ||0)+' done':'+'+(s.xp-(lw[s.name]||0))+' XP';
+    return`<div class="lbr"><span class="lbrnk ${i<3?'r'+(i+1):''}">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</span>
+      <span style="flex:1;font-weight:700;font-size:.82rem;">${s.name} <span class="cb ${s.cls}">${s.cls}</span></span>
+      <span style="font-family:'Orbitron',monospace;font-size:.72rem;color:var(--eml);">${v}</span></div>`;
+  }).join('');
+}
+function setLB(cat,btn){lbCat=cat;document.querySelectorAll('#lbtabs .btn').forEach(b=>{b.style.borderColor='';b.style.color='';});btn.style.borderColor='rgba(245,158,11,.4)';btn.style.color='var(--go)';rLB(cat);}
+
+function rAchGal(){
+  const cats=['Caring','Thinker','Communicator','Risk-Taker','Inquirer'];const cnts={};cats.forEach(c=>{cnts[c]=0;});
+  (D.students||[]).flatMap(s=>s.achievements||[]).forEach(a=>{if(cnts[a.cat]!==undefined)cnts[a.cat]++;});
+  document.getElementById('achgal').innerHTML=cats.map(c=>
+    `<div style="text-align:center;background:rgba(0,0,0,.2);border-radius:8px;padding:8px 12px;border:1px solid rgba(255,255,255,.05);">
+      <div style="font-size:1.4rem;">${CE_MAP[c]}</div>
+      <div style="font-size:.62rem;font-weight:700;color:var(--tm);text-transform:uppercase;">${c}</div>
+      <div style="font-family:'Orbitron',monospace;font-size:.9rem;color:var(--go);">${cnts[c]}</div>
+    </div>`).join('');
+}
+
+function rWkProg(){
+  const total=Object.values(D.weekXP||{}).reduce((a,c)=>a+c,0);
+  const qDone=Object.keys(D.quests||{}).filter(k=>D.quests[k]).length;
+  document.getElementById('wkprog').innerHTML=`
+    <div style="font-size:.68rem;color:var(--tm);margin-bottom:.3rem;">Class XP this week: <b style="color:var(--eml);">${total}</b></div>
+    <div class="pb" style="height:7px;margin-bottom:.4rem;"><div class="pf" style="width:${Math.min(100,total/5)}%;"></div></div>
+    <div style="font-size:.7rem;color:var(--tm);">📜 ${qDone} quests done · 🔥 ${D.streak||1} day streak</div>`;
+}
+
+function rDailyBonus(){
+  const wrap=document.getElementById('dbwrap');
+  if(D.dailyClaimed){wrap.innerHTML='';return;}
+  const str=D.streak||1,bonus=Math.min(str*2,20);
+  wrap.innerHTML=`<div class="db">
+    <div style="font-size:1.5rem;margin-bottom:.3rem;">🎁</div>
+    <div style="font-family:'MedievalSharp',serif;font-size:.9rem;color:var(--go);margin-bottom:.2rem;">Daily Login Bonus — Day ${str} Streak!</div>
+    <button class="btn bgo bsm" onclick="claimBonus()">🎁 Claim +${bonus} Gold to Treasury</button>
+  </div>`;
+}
+function claimBonus(){const bonus=Math.min((D.streak||1)*2,20);D.kingdom.treasury=(D.kingdom.treasury||0)+bonus;D.dailyClaimed=true;sv(D);document.getElementById('dbwrap').innerHTML=`<div style="font-size:.78rem;color:var(--eml);padding:.3rem 0;">✅ Claimed! +${bonus} Gold. Streak: ${D.streak} days 🔥</div>`;toast(`🎁 +${bonus} Gold. ${D.streak} day streak!`);}
+
+function rEvMini(){
+  const wrap=document.getElementById('evmini');if(!D.event||D.event.completed){wrap.innerHTML='';return;}
+  const ev=D.event;const pt=Object.values(ev.progress||{}).reduce((a,c)=>a+c,0);const rt=Object.values(ev.req||{}).reduce((a,c)=>a+c,0);
+  const pct=rt>0?Math.min(100,Math.round(pt/rt*100)):0;
+  const rc={common:'rgba(59,130,246,.4)',rare:'rgba(124,58,237,.5)',epic:'rgba(245,158,11,.6)'}[ev.rarity];
+  wrap.innerHTML=`<div style="background:rgba(0,0,0,.3);border:1px solid ${rc};border-radius:10px;padding:9px 12px;display:flex;align-items:center;gap:10px;">
+    <span style="font-size:1.6rem;">${ev.e}</span>
+    <div style="flex:1;">
+      <div style="font-family:'MedievalSharp',serif;font-size:.82rem;color:var(--gol);">${ev.n} <span style="font-size:.58rem;color:var(--tm);">[${ev.rarity}]</span></div>
+      <div class="pb" style="height:4px;margin-top:3px;"><div class="pf go" style="width:${pct}%"></div></div>
+      <div style="font-size:.62rem;color:var(--tm);margin-top:2px;">${pct}% · ${getEvTimer()}</div>
+    </div>
+    <button class="btn bsm bro" onclick="nav('events',{target:document.querySelector('.nt:nth-child(4)')})">View →</button>
+  </div>`;
+}
+
+// Class Unlock Tracker
+function rUnlockTracker(){
+  const el=document.getElementById('unlock-tracker');
+  const res=D.kingdom.res||{};
+  const html=UNLOCKS.map((u,i)=>{
+    const needed=u.resNeeded;
+    const totNeeded=Object.values(needed).reduce((a,c)=>a+c,0);
+    // Progress = sum of class resources against needed (capped)
+    let totHave=0;Object.entries(needed).forEach(([k,v])=>{totHave+=Math.min(res[k]||0,v);});
+    const pct=Math.round(totHave/totNeeded*100);
+    const done=pct>=100;
+    return`<div class="unlock-tier ${done?'unlocked':''}">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem;">
+        <div style="display:flex;align-items:center;gap:.6rem;">
+          <div class="unlock-reward">${u.emoji}</div>
+          <div><div class="unlock-name">${u.name}</div><div class="unlock-desc">${u.desc}</div></div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-family:'Orbitron',monospace;font-size:.8rem;color:${done?'var(--em)':'var(--go)'};">${done?'✅ UNLOCKED!':pct+'%'}</div>
+          <div style="font-size:.62rem;color:var(--tm);">Tier ${u.tier} reward</div>
+        </div>
+      </div>
+      <div class="pb" style="height:7px;"><div class="pf ${done?'':'go'}" style="width:${pct}%;${done?'background:linear-gradient(90deg,var(--emd),var(--eml));':''}"></div></div>
+      <div style="font-size:.62rem;color:var(--tm);margin-top:3px;">${Object.entries(needed).map(([k,v])=>`${RES_IC[k]}${Math.min(res[k]||0,v)}/${v}`).join(' · ')}</div>
+    </div>`;
+  }).join('');
+  el.innerHTML=html;
+}
+
+// ═══════════════════════════════════════
+//  HERO KINGDOM PAGE
+// ═══════════════════════════════════════
+let hkSelectedIdx=0;
+
+function rHeroKingdom(){
+  const grid=document.getElementById('hk-select-grid');
+  if(!D.students||!D.students.length){
+    grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--tm);">No heroes yet. Enroll heroes in the Heroes tab!</div>';
+    document.getElementById('hk-detail').style.display='none';return;
+  }
+  grid.innerHTML=D.students.map((s,i)=>{
+    const av=CA[s.cls]||CA.Scholar;const lv=getLv(s.xp);const title=getTitle(lv);
+    const bldCount=(s.pkBuildings||[]).length;const cosCount=(s.pkCosmetics||[]).length;
+    return`<div class="sc" onclick="selectHK(${i})" style="${i===hkSelectedIdx?'border-color:rgba(16,185,129,.5);box-shadow:0 0 15px rgba(16,185,129,.15);':''}">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;">
+        <div class="sav" style="background:${av.c};">${av.e}</div>
+        <span class="cb ${s.cls}">${s.cls}</span>
+      </div>
+      <div style="font-family:'MedievalSharp',serif;font-size:.9rem;margin-bottom:1px;">${s.name}</div>
+      <div style="font-size:.65rem;color:var(--eml);margin-bottom:6px;">${title}</div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;">
+        <span class="pill x" style="font-size:.6rem;">Lv <b>${lv}</b></span>
+        <span class="pill g" style="font-size:.6rem;">💰 <b>${s.pkRes?.gold||0}</b></span>
+        <span class="pill hp" style="font-size:.6rem;">⭐ <b>${s.heroPoints||0}</b></span>
+        <span class="pill" style="font-size:.6rem;">🏗 <b>${bldCount}</b></span>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('hk-detail').style.display='block';
+  showHKDetail(hkSelectedIdx);
+}
+
+function selectHK(idx){hkSelectedIdx=idx;rHeroKingdom();}
+
+function showHKDetail(idx){
+  const s=D.students[idx];if(!s)return;
+  if(!s.pkRes)s.pkRes={stone:0,wood:0,gold:0,knowledge:0};
+  if(!s.pkBuildings)s.pkBuildings=[];
+  if(!s.pkCosmetics)s.pkCosmetics=[];
+  const av=CA[s.cls]||CA.Scholar;const lv=getLv(s.xp);const xi=xpNext(s.xp);const title=getTitle(lv);
+  // Header
+  document.getElementById('hk-hero-header').innerHTML=`
+    <div class="sav" style="background:${av.c};width:52px;height:52px;font-size:1.3rem;">${av.e}</div>
+    <div>
+      <div style="font-family:'MedievalSharp',serif;font-size:1.2rem;color:var(--go);">${s.name}</div>
+      <div style="font-size:.72rem;color:var(--eml);margin-bottom:3px;">${title} · Level ${lv}</div>
+      <div style="display:flex;gap:6px;">
+        <span class="pill x" style="font-size:.62rem;">XP <b>${s.xp}</b></span>
+        <span class="pill g" style="font-size:.62rem;">💰 <b>${s.pkRes.gold}</b></span>
+        <span class="pill hp" style="font-size:.62rem;">⭐ <b>${s.heroPoints||0}</b></span>
+      </div>
+    </div>
+    <button class="btn bgh bsm" style="margin-left:auto;" onclick="rHeroKingdom()">← Back</button>`;
+  // Personal resources
+  document.getElementById('hk-res-display').innerHTML=Object.entries(s.pkRes).map(([k,v])=>
+    `<div style="display:flex;align-items:center;gap:6px;padding:5px 8px;background:rgba(0,0,0,.2);border-radius:6px;margin-bottom:4px;border:1px solid rgba(16,185,129,.08);">
+      <span>${RES_IC[k]||k}</span><span style="flex:1;font-size:.75rem;font-weight:700;">${k.charAt(0).toUpperCase()+k.slice(1)}</span>
+      <span style="font-family:'Orbitron',monospace;font-size:.75rem;color:var(--eml);">${v}</span>
+    </div>`).join('');
+  // Stats
+  document.getElementById('hk-stats-display').innerHTML=`
+    <div style="font-size:.72rem;color:var(--tm);margin-bottom:5px;">XP to Level ${lv+1}</div>
+    <div class="pb" style="height:7px;margin-bottom:.5rem;"><div class="pf" style="width:${xi.p}%"></div></div>
+    <div style="font-size:.65rem;color:var(--tm);">${xi.c} / ${xi.n} XP</div>
+    <div class="dv"></div>
+    <div style="font-size:.72rem;color:var(--go);font-family:'MedievalSharp',serif;">🏅 Achievements: ${(s.achievements||[]).length}</div>`;
+  // Kingdom map (mini — show built buildings)
+  rHKMap(s);
+  // Personal buildings
+  rHKBuildings(s,idx);
+  // Cosmetics display
+  rHKCosmetics(s,idx);
+  // Shop
+  rHKShop(s,idx);
+}
+
+function rHKMap(s){
+  const map=document.getElementById('hkmap');map.querySelectorAll('.bs').forEach(e=>e.remove());
+  const positions=[
+    {top:'35%',left:'40%'},{top:'20%',left:'65%'},{top:'60%',left:'20%'},
+    {top:'65%',left:'58%'},{top:'15%',left:'25%'},{top:'70%',left:'75%'},
+    {top:'45%',left:'78%'},{top:'50%',left:'45%'},
+  ];
+  (s.pkBuildings||[]).forEach((bid,i)=>{
+    const bDef=HK_BUILDINGS.find(x=>x.id===bid);if(!bDef)return;
+    const pos=positions[i%positions.length];
+    const el=document.createElement('div');el.className='bs';Object.assign(el.style,pos);
+    el.innerHTML=`<span class="bi" style="font-size:1.4rem;">${bDef.e}</span><div class="bl">${bDef.n}</div>`;
+    map.appendChild(el);
+  });
+  if(!(s.pkBuildings||[]).length){
+    const empty=document.createElement('div');empty.style.cssText='position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:var(--tm);font-size:.78rem;';
+    empty.innerHTML='🏡 Build your first structure!';map.appendChild(empty);
+  }
+}
+
+function rHKBuildings(s,idx){
+  const built=s.pkBuildings||[];
+  document.getElementById('hk-buildings').innerHTML=HK_BUILDINGS.map(b=>{
+    const owned=built.includes(b.id);
+    const costStr=Object.entries(b.cost).map(([k,v])=>`${RES_IC[k]}${v}`).join(' ');
+    const canAfford=Object.entries(b.cost).every(([k,v])=>(s.pkRes[k]||0)>=v);
+    return`<div class="hk-building ${!owned&&!canAfford?'locked':''}">
+      <span class="hkb-ico">${b.e}</span>
+      <div class="hkb-name">${b.n}</div>
+      <div style="font-size:.62rem;color:var(--tm);margin-bottom:.4rem;">${b.desc}</div>
+      <div style="font-size:.62rem;color:var(--gol);margin-bottom:.4rem;">${costStr}</div>
+      ${owned?`<span style="font-size:.65rem;color:var(--em);font-weight:700;">✅ Built</span>`:
+        canAfford?`<button class="btn bem bxs" onclick="buildHK(${idx},'${b.id}')">Build</button>`:
+        `<span style="font-size:.62rem;color:var(--tm);">Need more resources</span>`}
+    </div>`;
+  }).join('');
+}
+
+function buildHK(idx,bid){
+  const s=D.students[idx];const b=HK_BUILDINGS.find(x=>x.id===bid);if(!s||!b)return;
+  if(!s.pkRes)s.pkRes={stone:0,wood:0,gold:0,knowledge:0};
+  if(!s.pkBuildings)s.pkBuildings=[];
+  if(s.pkBuildings.includes(bid)){toast('Already built!','d');return;}
+  const canAfford=Object.entries(b.cost).every(([k,v])=>(s.pkRes[k]||0)>=v);
+  if(!canAfford){toast('Not enough resources!','d');return;}
+  Object.entries(b.cost).forEach(([k,v])=>s.pkRes[k]-=v);
+  s.pkBuildings.push(bid);sv(D);
+  showHKDetail(idx);toast(`🏗 ${b.n} built in ${s.name}'s kingdom!`,'s');
+}
+
+function rHKCosmetics(s,idx){
+  const owned=s.pkCosmetics||[];
+  const pets=HK_COSMETICS.filter(c=>c.type==='pet');
+  const decos=HK_COSMETICS.filter(c=>c.type==='deco');
+  const petsHtml=pets.map(c=>{
+    const isOwned=owned.includes(c.id);
+    return`<div class="cosm-item ${isOwned?'owned':''}" style="padding:.5rem .75rem;border-radius:8px;">
+      <div style="font-size:1.3rem;">${c.e}</div>
+      <div style="font-size:.65rem;font-weight:700;margin-top:2px;">${c.n}</div>
+      ${isOwned?'<div style="font-size:.6rem;color:var(--em);">✓ Owned</div>':''}
+    </div>`;
+  }).join('');
+  const decosHtml=decos.map(c=>{
+    const isOwned=owned.includes(c.id);
+    return`<div class="cosm-item ${isOwned?'owned':''}" style="padding:.5rem .75rem;border-radius:8px;">
+      <div style="font-size:1.3rem;">${c.e}</div>
+      <div style="font-size:.65rem;font-weight:700;margin-top:2px;">${c.n}</div>
+      ${isOwned?'<div style="font-size:.6rem;color:var(--em);">✓ Owned</div>':''}
+    </div>`;
+  }).join('');
+  document.getElementById('hk-cosmetics').innerHTML=`
+    <div style="font-size:.72rem;font-weight:700;color:var(--tm);text-transform:uppercase;margin-bottom:.4rem;">🐾 Pets</div>
+    <div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.75rem;">${petsHtml||'<span style="font-size:.72rem;color:var(--tm);">None yet</span>'}</div>
+    <div style="font-size:.72rem;font-weight:700;color:var(--tm);text-transform:uppercase;margin-bottom:.4rem;">🌸 Decorations</div>
+    <div style="display:flex;flex-wrap:wrap;gap:.4rem;">${decosHtml||'<span style="font-size:.72rem;color:var(--tm);">None yet</span>'}</div>`;
+}
+
+function rHKShop(s,idx){
+  document.getElementById('hk-shop').innerHTML=HK_COSMETICS.map(c=>{
+    const owned=(s.pkCosmetics||[]).includes(c.id);
+    const costStr=Object.entries(c.cost).map(([k,v])=>`${RES_IC[k]}${v}`).join(' ');
+    const canAfford=Object.entries(c.cost).every(([k,v])=>(s.pkRes?.[k]||0)>=v);
+    const typeLabel={pet:'🐾 Pet',deco:'🌸 Deco'}[c.type]||c.type;
+    return`<div style="background:rgba(0,0,0,.2);border-radius:9px;padding:.75rem;border:1px solid rgba(255,255,255,.06);text-align:center;">
+      <div style="font-size:1.8rem;">${c.e}</div>
+      <div style="font-family:'MedievalSharp',serif;font-size:.75rem;margin-bottom:2px;">${c.n}</div>
+      <div style="font-size:.6rem;color:var(--tm);margin-bottom:4px;">${typeLabel}</div>
+      <div style="font-size:.65rem;color:var(--gol);margin-bottom:.4rem;">${costStr}</div>
+      ${owned?`<span style="font-size:.65rem;color:var(--em);font-weight:700;">✅ Owned</span>`:
+        canAfford?`<button class="btn bem bxs" onclick="buyHKCosm(${idx},'${c.id}')">Buy</button>`:
+        `<span style="font-size:.6rem;color:var(--tm);">Need resources</span>`}
+    </div>`;
+  }).join('');
+}
+
+function buyHKCosm(idx,cid){
+  const s=D.students[idx];const c=HK_COSMETICS.find(x=>x.id===cid);if(!s||!c)return;
+  if(!s.pkRes)s.pkRes={stone:0,wood:0,gold:0,knowledge:0};
+  if(!s.pkCosmetics)s.pkCosmetics=[];
+  if(s.pkCosmetics.includes(cid)){toast('Already owned!','d');return;}
+  const canAfford=Object.entries(c.cost).every(([k,v])=>(s.pkRes[k]||0)>=v);
+  if(!canAfford){toast('Not enough resources!','d');return;}
+  Object.entries(c.cost).forEach(([k,v])=>s.pkRes[k]-=v);
+  s.pkCosmetics.push(cid);sv(D);showHKDetail(idx);toast(`${c.e} ${c.n} added to ${s.name}'s kingdom!`,'s');
+}
+
+// ═══════════════════════════════════════
+//  HEROES PAGE
+// ═══════════════════════════════════════
+function rHeroes(){
+  const g=document.getElementById('hgrid');
+  if(!D.students||!D.students.length){g.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:3rem;"><div style="font-size:2.5rem;margin-bottom:.875rem;">⚔️</div><div style="font-family:'MedievalSharp',serif;font-size:1.1rem;margin-bottom:.75rem;">No Heroes Yet!</div><button class="btn bgo" onclick="openModal('m-addh')">+ Enroll First Hero</button></div>`;return;}
+  g.innerHTML=D.students.map((s,i)=>{
+    const av=CA[s.cls]||CA.Scholar;const lv=getLv(s.xp);const xi=xpNext(s.xp);const title=getTitle(lv);
+    return`<div class="sc" onclick="showHD(${i})">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;">
+        <div class="sav" style="background:${av.c};">${av.e}</div><span class="cb ${s.cls}">${s.cls}</span>
+      </div>
+      <div style="font-family:'MedievalSharp',serif;font-size:.92rem;margin-bottom:1px;">${s.name}</div>
+      <div style="font-size:.65rem;color:var(--eml);margin-bottom:6px;">${title}</div>
+      <div style="margin-bottom:.4rem;">
+        <div style="display:flex;justify-content:space-between;font-size:.62rem;color:var(--tm);margin-bottom:3px;"><span>XP to Lv ${lv+1}</span><span>${xi.c}/${xi.n}</span></div>
+        <div class="pb"><div class="pf" style="width:${xi.p}%"></div></div>
+      </div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;">
+        <span class="pill x" style="font-size:.6rem;">XP <b>${s.xp}</b></span>
+        <span class="pill g" style="font-size:.6rem;">💰 <b>${s.gold}</b></span>
+        <span class="pill hp" style="font-size:.6rem;">⭐ <b>${s.heroPoints||0}</b></span>
+        <span class="pill lv" style="font-size:.6rem;">Lv <b>${lv}</b></span>
+      </div>
+      ${(s.achievements||[]).length?`<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:3px;">${(s.achievements||[]).slice(-3).map(a=>`<span class="ab ${a.cat}">${a.cat}</span>`).join('')}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function showHD(idx){
+  const s=D.students[idx];if(!s)return;
+  const av=CA[s.cls]||CA.Scholar;const lv=getLv(s.xp);const xi=xpNext(s.xp);const title=getTitle(lv);const achs=s.achievements||[];
+  document.getElementById('hdcont').innerHTML=`
+    <div style="display:flex;align-items:center;gap:.875rem;margin-bottom:1.1rem;">
+      <div class="sav" style="background:${av.c};width:56px;height:56px;font-size:1.4rem;">${av.e}</div>
+      <div><div style="font-family:'MedievalSharp',serif;font-size:1.2rem;color:var(--go);">${s.name}</div>
+        <div style="font-size:.68rem;color:var(--eml);margin-bottom:3px;">${title}</div>
+        <div style="display:flex;gap:5px;"><span class="cb ${s.cls}">${s.cls}</span><span class="pill lv" style="font-size:.6rem;">Level <b>${lv}</b></span></div>
+      </div>
+    </div>
+    <div class="g4" style="gap:7px;margin-bottom:.875rem;">
+      <div style="background:rgba(0,0,0,.2);border-radius:8px;padding:8px;text-align:center;border:1px solid rgba(16,185,129,.2);"><div style="font-size:.58rem;color:var(--tm);text-transform:uppercase;">XP</div><div style="font-family:'Orbitron',monospace;font-size:1rem;color:var(--eml);">${s.xp}</div></div>
+      <div style="background:rgba(0,0,0,.2);border-radius:8px;padding:8px;text-align:center;border:1px solid rgba(245,158,11,.2);"><div style="font-size:.58rem;color:var(--tm);text-transform:uppercase;">Gold</div><div style="font-family:'Orbitron',monospace;font-size:1rem;color:var(--go);">${s.gold||0}</div></div>
+      <div style="background:rgba(0,0,0,.2);border-radius:8px;padding:8px;text-align:center;border:1px solid rgba(236,72,153,.2);"><div style="font-size:.58rem;color:var(--tm);text-transform:uppercase;">⭐ HP</div><div style="font-family:'Orbitron',monospace;font-size:1rem;color:var(--hp);">${s.heroPoints||0}</div></div>
+      <div style="background:rgba(0,0,0,.2);border-radius:8px;padding:8px;text-align:center;border:1px solid rgba(124,58,237,.2);"><div style="font-size:.58rem;color:var(--tm);text-transform:uppercase;">Badges</div><div style="font-family:'Orbitron',monospace;font-size:1rem;color:var(--pul);">${achs.length}</div></div>
+    </div>
+    <div style="margin-bottom:.875rem;"><div style="display:flex;justify-content:space-between;font-size:.7rem;color:var(--tm);margin-bottom:3px;"><span>XP to Level ${lv+1}</span><span>${xi.c}/${xi.n}</span></div>
+      <div class="pb" style="height:8px;"><div class="pf" style="width:${xi.p}%"></div></div></div>
+    <div style="margin-bottom:.875rem;">
+      <div style="font-family:'MedievalSharp',serif;font-size:.82rem;color:var(--go);margin-bottom:5px;">🏅 Achievements</div>
+      ${achs.length?`<div style="display:flex;flex-wrap:wrap;gap:4px;">${achs.map(a=>`<span class="ab ${a.cat}">${CE_MAP[a.cat]} ${a.name||a.cat}</span>`).join('')}</div>`:'<p style="color:var(--tm);font-size:.75rem;">No achievements yet!</p>'}
+    </div>
+    <button class="btn bre bsm" onclick="rmHero(${idx})">🗑 Remove Hero</button>`;
+  openModal('m-hd');
+}
+
+function addHero(){requireTeacher(_addHero);}
+function _addHero(){
+  const n=document.getElementById('nsn').value.trim(),c=document.getElementById('nsc').value;
+  if(!n){toast('Enter a hero name!','d');return;}
+  const newHero=migrate_student({name:n,cls:c,xp:0,gold:0,heroPoints:0,achievements:[]});
+  D.students.push(newHero);sv(D);closeModal('m-addh');document.getElementById('nsn').value='';rHeroes();updTSels();toast(`⚔️ ${n} the ${c} joined!`);
+}
+function rmHero(idx){requireTeacher(()=>_rmHero(idx));}
+function _rmHero(idx){const s=D.students[idx];if(!s)return;if(!confirm(`Remove ${s.name}?`))return;D.students.splice(idx,1);sv(D);closeModal('m-hd');rHeroes();updTSels();toast(`${s.name} left.`,'d');}
+
+// ═══════════════════════════════════════
+//  QUEST ALLOCATION SYSTEM
+// ═══════════════════════════════════════
+let pendingQuest=null;let allocPct=50;
+
+function doQ(qid){
+  if(!D.students||!D.students.length){toast('Add heroes first!','d');return;}
+  const all=[...QB,...(D.customQ||[])];const q=all.find(x=>x.id===qid);if(!q)return;
+  pendingQuest=q;allocPct=D.allocPct||50;
+  showAllocModal(q);
+}
+
+function showAllocModal(q){
+  document.getElementById('alloc-desc').textContent=`"${q.t}" — Choose how to allocate your resource rewards between your Hero Kingdom and the Class Kingdom.`;
+  // Build preview of taxable resources
+  const taxable={};
+  if(q.r.gold)taxable.gold=q.r.gold;if(q.r.res&&q.r.amt)taxable[q.r.res]=q.r.amt;
+  const taxAmt=Math.ceil;
+  let prevHtml='<div style="display:flex;gap:6px;flex-wrap:wrap;">';
+  if(q.r.xp)prevHtml+=`<span class="pill x" style="font-size:.68rem;">+${q.r.xp} XP</span>`;
+  if(q.r.hp)prevHtml+=`<span class="pill hp" style="font-size:.68rem;">+${q.r.hp} ⭐</span>`;
+  if(q.r.gold)prevHtml+=`<span class="pill g" style="font-size:.68rem;">+${q.r.gold} Gold</span>`;
+  if(q.r.res&&q.r.amt)prevHtml+=`<span class="pill" style="font-size:.68rem;">+${q.r.amt} ${RES_IC[q.r.res]} ${q.r.res}</span>`;
+  prevHtml+='</div>';
+  document.getElementById('alloc-res-preview').innerHTML=prevHtml;
+  const taxPct=Math.round(TAX_RATE*100);
+  document.getElementById('alloc-tax-msg').textContent=`${taxPct}% automatically contributes to the Class Kingdom (Kingdom Tax). Your allocation controls the remaining ${100-taxPct}%.`;
+  setAlloc(allocPct);
+  document.getElementById('alloc-confirm-btn').onclick=confirmAlloc;
+  openModal('m-alloc');
+}
+
+function setAlloc(heroPct){
+  allocPct=heroPct;
+  document.getElementById('alloc-hero-pct').textContent=heroPct+'%';
+  document.getElementById('alloc-class-pct').textContent=(100-heroPct)+'%';
+  document.getElementById('alloc-bar-hero').style.width=heroPct+'%';
+  document.getElementById('alloc-bar-class').style.width=(100-heroPct)+'%';
+  document.querySelectorAll('.alloc-btn').forEach(b=>{
+    const v=b.textContent==='100% Hero'?100:b.textContent==='75/25'?75:b.textContent==='50/50'?50:b.textContent==='25/75'?25:0;
+    b.classList.toggle('active',v===heroPct);
+  });
+  // Show split preview
+  if(!pendingQuest){return;}
+  const q=pendingQuest;const taxed=TAX_RATE;const free=1-taxed;
+  const heroShare=Math.round((heroPct/100)*free*100)/100;const classShare=Math.round(((1-heroPct/100)*free)*100)/100;
+  let html='<div style="display:flex;gap:1rem;flex-wrap:wrap;">';
+  if(q.r.gold){
+    const tax=Math.ceil(q.r.gold*taxed);const remain=q.r.gold-tax;
+    const hero=Math.round(remain*heroPct/100);const cls=remain-hero;
+    html+=`<div><b style="color:var(--gol);">💰 Gold (${q.r.gold})</b><br><span style="font-size:.68rem;color:var(--tm);">Tax: ${tax} → Class<br>⚔️ Hero: ${hero} · 🏰 Class: ${cls}</span></div>`;
+  }
+  if(q.r.res&&q.r.amt){
+    const tax=Math.ceil(q.r.amt*taxed);const remain=q.r.amt-tax;
+    const hero=Math.round(remain*heroPct/100);const cls=remain-hero;
+    html+=`<div><b style="color:var(--gol);">${RES_IC[q.r.res]} ${q.r.res} (${q.r.amt})</b><br><span style="font-size:.68rem;color:var(--tm);">Tax: ${tax} → Class<br>⚔️ Hero: ${hero} · 🏰 Class: ${cls}</span></div>`;
+  }
+  html+='</div>';
+  document.getElementById('alloc-split-preview').innerHTML=html;
+}
+
+function confirmAlloc(){
+  if(!pendingQuest){closeModal('m-alloc');return;}
+  const q=pendingQuest;const s=D.students[0];if(!s)return;
+  // Mark quest done
+  D.quests[q.id]=true;
+  // Award XP (always to hero)
+  if(q.r.xp){s.xp=(s.xp||0)+q.r.xp;D.weekXP[s.name]=(D.weekXP[s.name]||0)+q.r.xp;}
+  // Award Hero Points (always to hero, non-transferable)
+  if(q.r.hp){s.heroPoints=(s.heroPoints||0)+q.r.hp;}
+  // Resource allocation with tax
+  function allocRes(total,key,isGold){
+    const tax=Math.ceil(total*TAX_RATE);
+    const remain=total-tax;
+    const heroAmt=Math.round(remain*allocPct/100);
+    const classAmt=remain-heroAmt;
+    // Tax always goes to class
+    if(isGold){
+      D.kingdom.res.gold=(D.kingdom.res.gold||0)+tax+classAmt;
+      if(!s.pkRes)s.pkRes={stone:0,wood:0,gold:0,knowledge:0};
+      s.pkRes.gold=(s.pkRes.gold||0)+heroAmt;
+      s.gold=(s.gold||0)+heroAmt; // also track total gold
+    } else {
+      D.kingdom.res[key]=(D.kingdom.res[key]||0)+tax+classAmt;
+      if(!s.pkRes)s.pkRes={stone:0,wood:0,gold:0,knowledge:0};
+      s.pkRes[key]=(s.pkRes[key]||0)+heroAmt;
+    }
+    s.weeklyRes=(s.weeklyRes||0)+(heroAmt+classAmt+tax);
+  }
+  if(q.r.gold)allocRes(q.r.gold,'gold',true);
+  if(q.r.res&&q.r.amt)allocRes(q.r.amt,q.r.res,false);
+  s.weeklyQ=(s.weeklyQ||0)+1;
+  D.allocPct=allocPct;sv(D);
+  closeModal('m-alloc');rQuests();
+  toast(`📜 Quest complete! +${q.r.xp||0} XP, +${q.r.hp||0} ⭐${q.r.gold?`, 💰${q.r.gold} split`:''}`,'s');
+  pendingQuest=null;
+}
+
+function rQuests(){
+  const all=[...QB,...(D.customQ||[])];
+  document.getElementById('qgrid').innerHTML=all.map(q=>{
+    const dn=D.quests[q.id],isC=!!q.custom;
+    return`<div class="qc ${dn?'dn':''} ${isC?'cq':''}">
+      ${isC?`<div style="font-size:.58rem;color:var(--pul);font-weight:700;text-transform:uppercase;margin-bottom:4px;">⭐ Teacher Quest</div>`:''}
+      <div style="font-size:1.5rem;margin-bottom:5px;">${q.i||'📋'}</div>
+      <div style="font-family:'MedievalSharp',serif;font-size:.85rem;color:var(--gol);margin-bottom:3px;">${q.t}</div>
+      <div style="font-size:.72rem;color:var(--tm);line-height:1.5;margin-bottom:7px;">${q.d}</div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:7px;">
+        ${q.r.xp?`<span class="pill x" style="font-size:.6rem;">+${q.r.xp} XP</span>`:''}
+        ${q.r.hp?`<span class="pill hp" style="font-size:.6rem;">+${q.r.hp} ⭐</span>`:''}
+        ${q.r.gold?`<span class="pill g" style="font-size:.6rem;">💰${q.r.gold}</span>`:''}
+        ${q.r.res?`<span class="pill" style="font-size:.6rem;">+${q.r.amt||20} ${RES_IC[q.r.res]}</span>`:''}
+      </div>
+      ${!dn?`<button class="btn bem bsm" style="width:100%;" onclick="doQ('${q.id}')">⚔️ Complete &amp; Allocate</button>`:''}
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════
+//  EVENTS PAGE
+// ═══════════════════════════════════════
+function rEvents(){
+  const el=document.getElementById('evfull');
+  if(!D.event){el.innerHTML=`<div style="text-align:center;padding:3rem;color:var(--tm);"><div style="font-size:3rem;">⚡</div><div style="font-family:'MedievalSharp',serif;font-size:1.1rem;color:var(--go);margin:.5rem 0;">No Active Event</div><p>Events generate automatically every Monday!</p></div>`;return;}
+  const ev=D.event;const ic=RES_IC;
+  const pt=Object.values(ev.progress||{}).reduce((a,c)=>a+c,0);
+  const rt=Object.values(ev.req||{}).reduce((a,c)=>a+c,0);
+  const pct=rt>0?Math.min(100,Math.round(pt/rt*100)):0;
+  const rcls={common:'evc-c',rare:'evc-r',epic:'evc-e'}[ev.rarity]||'evc-c';
+  const rclr={common:'#93c5fd',rare:'#c4b5fd',epic:'var(--gol)'}[ev.rarity];
+  let rqH='';Object.entries(ev.req||{}).forEach(([k,v])=>{const pg=Math.min(ev.progress[k]||0,v);const pp=Math.round(pg/v*100);rqH+=`<div style="margin-bottom:.5rem;"><div style="display:flex;justify-content:space-between;font-size:.72rem;margin-bottom:3px;"><span>${ic[k]||k} ${k}</span><span style="font-family:'Orbitron',monospace;color:var(--go);">${pg} / ${v}</span></div><div class="pb" style="height:6px;"><div class="pf go" style="width:${pp}%"></div></div></div>`;});
+  const rwH=Object.entries(ev.reward||{}).map(([k,v])=>k==='gold'?`<span class="pill g">💰 <b>${v}</b></span>`:k==='xpAll'?`<span class="pill x">⚡ <b>+${v} XP</b> all</span>`:'').join(' ');
+  el.innerHTML=`<div class="evc ${rcls}">
+    <div style="font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:${rclr};margin-bottom:.4rem;">${{common:'⚔️ Common',rare:'💜 Rare',epic:'🌟 Epic'}[ev.rarity]} Event</div>
+    <div style="font-size:2.5rem;margin-bottom:.4rem;">${ev.e}</div>
+    <div style="font-family:'MedievalSharp',serif;font-size:1.2rem;color:var(--go);margin-bottom:.3rem;">${ev.n}</div>
+    <div style="font-size:.8rem;color:var(--tm);line-height:1.6;margin-bottom:.875rem;">${ev.desc}</div>
+    <div class="dv"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+      <div><div style="font-size:.68rem;font-weight:700;color:var(--tm);text-transform:uppercase;margin-bottom:.4rem;">Requirements</div>${rqH}
+        <div style="margin-top:.6rem;"><div style="font-size:.68rem;font-weight:700;color:var(--tm);margin-bottom:.3rem;">Overall: ${pct}% · ${getEvTimer()}</div>
+          <div class="pb" style="height:9px;"><div class="pf go" style="width:${pct}%"></div></div></div>
+      </div>
+      <div><div style="font-size:.68rem;font-weight:700;color:var(--tm);text-transform:uppercase;margin-bottom:.4rem;">Rewards</div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:.875rem;">${rwH}</div>
+        ${ev.completed?`<div style="color:var(--eml);font-family:'MedievalSharp',serif;font-size:.9rem;">✅ Complete! Rewards claimed.</div>`:
+        `<button class="btn bem bsm" style="width:100%;margin-bottom:7px;" onclick="contribEv()">⚒ Contribute Resources</button>
+         ${pct>=100?`<button class="btn bgo bsm" style="width:100%;" onclick="completeEvent()">🎉 Claim Rewards!</button>`:''}`}
+      </div>
+    </div>
+  </div>`;
+}
+
+function contribEv(){
+  if(!D.event||D.event.completed){toast('No active event!','d');return;}
+  const ev=D.event,res=D.kingdom.res;let done=false;
+  Object.entries(ev.req||{}).forEach(([k,v])=>{const pg=ev.progress[k]||0,rem=v-pg;if(rem<=0||(res[k]||0)<=0)return;const give=Math.min(rem,res[k]);res[k]-=give;ev.progress[k]=pg+give;done=true;});
+  if(!done){toast('Not enough matching resources!','d');return;}
+  sv(D);rEvents();rResDsp();
+  const pt=Object.values(ev.progress).reduce((a,c)=>a+c,0);const rt=Object.values(ev.req).reduce((a,c)=>a+c,0);
+  const pct=Math.min(100,Math.round(pt/rt*100));toast(`⚒ Contributed! (${pct}%)`);
+  if(pct>=100)toast('🎉 Requirements met! Claim rewards!');
+}
+function completeEvent(){
+  if(!D.event)return;const ev=D.event;
+  if(ev.reward){if(ev.reward.gold)D.kingdom.res.gold=(D.kingdom.res.gold||0)+ev.reward.gold;
+    if(ev.reward.xpAll&&D.students)D.students.forEach(s=>{s.xp=(s.xp||0)+ev.reward.xpAll;D.weekXP[s.name]=(D.weekXP[s.name]||0)+ev.reward.xpAll;});}
+  ev.completed=true;sv(D);rEvents();rResDsp();toast('🎉 Event complete! Rewards distributed!','s');
+}
+function forceEvent(){D.event=null;genEvent(getWkKey());sv(D);rEvents();rEvMini();toast('🎲 New event generated!');}
+function activateCustEvent(){
+  const n=document.getElementById('cen').value.trim(),d=document.getElementById('ced').value.trim();
+  if(!n||!d){toast('Add name and description!','d');return;}
+  const r=document.getElementById('cer').value,em=document.getElementById('cee').value.trim()||'⚡';
+  const req={};[['ce-st','stone'],['ce-wd','wood'],['ce-go','gold'],['ce-kn','knowledge']].forEach(([id,k])=>{const v=parseInt(document.getElementById(id).value)||0;if(v>0)req[k]=v;});
+  const rxp=parseInt(document.getElementById('ce-rxp').value)||0,rgo=parseInt(document.getElementById('ce-rgo').value)||0;
+  D.event={id:'cust_'+Date.now(),n,e:em,rarity:r,desc:d,req,reward:{...(rxp?{xpAll:rxp}:{}),...(rgo?{gold:rgo}:{})},impact:{},weekKey:getWkKey(),completed:false,progress:{stone:0,wood:0,gold:0,knowledge:0}};
+  sv(D);closeModal('m-cev');rEvents();rEvMini();toast(`⚡ "${n}" activated!`);
+}
+
+// ═══════════════════════════════════════
+//  BOSSES PAGE
+// ═══════════════════════════════════════
+function rBosses(){
+  const cbid=D.cbossId||'b1',cb=BD.find(b=>b.id===cbid)||BD[0];
+  let chp=D.cbossHP;if(!chp||chp>cb.maxHp)chp=cb.maxHp;
+  const cpct=Math.round((chp/cb.maxHp)*100),cdef=chp<=0;
+  document.getElementById('clsboss').innerHTML=`
+    <div style="background:linear-gradient(135deg,rgba(30,0,50,.9),rgba(50,0,20,.7));border:2px solid rgba(220,38,38,.4);border-radius:14px;padding:1.5rem;text-align:center;">
+      <div style="font-size:.68rem;color:#fca5a5;text-transform:uppercase;font-weight:700;letter-spacing:.1em;margin-bottom:.4rem;">🐉 Class Boss — Everyone Fights Together!</div>
+      <div style="font-size:3rem;margin:.5rem 0;">${cb.e}</div>
+      <div style="font-family:'MedievalSharp',serif;font-size:1.3rem;color:#fca5a5;margin-bottom:.3rem;">${cb.n}</div>
+      <div style="font-size:.75rem;color:var(--tm);margin-bottom:.875rem;">${cb.desc}</div>
+      <div style="max-width:380px;margin:0 auto .875rem;">
+        <div style="display:flex;justify-content:space-between;font-size:.7rem;color:var(--tm);margin-bottom:3px;"><span>Boss HP</span><span style="font-family:'Orbitron',monospace;color:#fca5a5;">${cdef?'DEFEATED':chp+' / '+cb.maxHp}</span></div>
+        <div style="height:13px;background:rgba(255,255,255,.06);border-radius:7px;overflow:hidden;border:1px solid rgba(220,38,38,.2);"><div style="height:100%;background:linear-gradient(90deg,#7f1d1d,var(--cr),#ff6b6b);border-radius:7px;width:${cpct}%;transition:width .8s;"></div></div>
+      </div>
+      ${cdef?`<div style="color:var(--eml);font-family:'MedievalSharp',serif;margin-bottom:.875rem;">🎉 VICTORY! Class defeated ${cb.n}!</div><button class="btn bem bsm" onclick="nextCB()">⚔️ Next Boss →</button>`
+      :`<div style="display:flex;gap:7px;justify-content:center;flex-wrap:wrap;">
+          <button class="atk" onclick="cbAtk('basic')">⚔️ Attack!</button>
+          <button class="atk" style="background:linear-gradient(135deg,#1e3a8a,var(--ro));" onclick="cbAtk('spell')">🪄 Spell!</button>
+          <button class="atk" style="background:linear-gradient(135deg,#064e3b,var(--emd));" onclick="cbAtk('team')">🛡 Team!</button>
+        </div>
+        <div style="font-size:.68rem;color:var(--tm);margin-top:.6rem;">Quest = 5dmg · Helpful = 2dmg · Quiz = 10dmg (via Teacher panel)</div>`}
+    </div>`;
+  document.getElementById('bgrid').innerHTML=BD.map(b=>{
+    const bs=D.bosses[b.id]||{hp:b.maxHp};const pct=Math.round((bs.hp/b.maxHp)*100);const def=bs.hp<=0;
+    return`<div class="bssc"><span style="font-size:2.2rem;display:block;margin-bottom:5px;${def?'filter:grayscale(1);opacity:.4;':''}">${b.e}</span>
+      <div style="font-family:'MedievalSharp',serif;font-size:.88rem;color:#fca5a5;margin-bottom:3px;">${b.n}</div>
+      <div style="font-size:.7rem;color:var(--tm);margin-bottom:9px;">${b.desc}</div>
+      <div style="height:6px;background:rgba(255,255,255,.07);border-radius:4px;overflow:hidden;margin-bottom:4px;"><div style="height:100%;background:linear-gradient(90deg,var(--cr),#ff6b6b);width:${pct}%;"></div></div>
+      <div style="font-size:.6rem;color:var(--tm);margin-bottom:7px;font-family:'Orbitron',monospace;">${def?'DEFEATED':bs.hp+'/'+b.maxHp+' HP'}</div>
+      <div style="font-size:.6rem;color:var(--go);text-transform:uppercase;margin-bottom:7px;">+${b.xpR} XP · ${b.goldR} Gold</div>
+      ${!def?`<button class="btn bre bxs" style="width:100%;" onclick="openSoloBoss('${b.id}')">⚔️ Solo Battle</button>`:`<button class="btn bgh bxs" style="width:100%;" onclick="rstBoss('${b.id}')">🔄 Respawn</button>`}
+    </div>`;
+  }).join('');
+}
+function cbAtk(type){
+  const cb=BD.find(b=>b.id===(D.cbossId||'b1'))||BD[0];let chp=D.cbossHP||cb.maxHp;
+  const dm={basic:[5,15],spell:[8,20],team:[12,25]}[type];const d=Math.floor(Math.random()*(dm[1]-dm[0])+dm[0]);
+  chp=Math.max(0,chp-d);D.cbossHP=chp;sv(D);toast(`⚔️ Class dealt ${d} damage! HP: ${chp}`);
+  if(chp<=0)cbDefeated(cb);else rBosses();
+}
+function bossDmg(d){
+  const cb=BD.find(b=>b.id===(D.cbossId||'b1'))||BD[0];let chp=D.cbossHP||cb.maxHp;chp=Math.max(0,chp-d);D.cbossHP=chp;sv(D);
+  toast(`🐉 ${d} damage to ${cb.n}! HP: ${chp}`);if(chp<=0)cbDefeated(cb);else if(document.getElementById('clsboss'))rBosses();
+}
+function cbDefeated(boss){
+  if(D.students)D.students.forEach(s=>{s.xp=(s.xp||0)+boss.xpR;s.gold=(s.gold||0)+Math.round(boss.goldR/(D.students.length||1));});
+  const rk=Object.keys(boss.res||{})[0];if(rk)D.kingdom.res[rk]=(D.kingdom.res[rk]||0)+boss.res[rk];
+  D.cbossHP=0;sv(D);toast(`🎉 CLASS VICTORY! ${boss.n} defeated! All heroes earned ${boss.xpR} XP!`,'s');rBosses();
+}
+function nextCB(){const idx=BD.findIndex(b=>b.id===D.cbossId);const nx=BD[(idx+1)%BD.length];D.cbossId=nx.id;D.cbossHP=nx.maxHp;sv(D);rBosses();toast(`🐉 Next: ${nx.n}!`);}
+function openSoloBoss(bid){
+  const b=BD.find(x=>x.id===bid);const bs=D.bosses[bid]||{hp:b.maxHp};const pct=Math.round((bs.hp/b.maxHp)*100);
+  document.getElementById('bossarena').innerHTML=`<div class="aw">
+    <div style="font-family:'MedievalSharp',serif;font-size:1.5rem;color:#fca5a5;margin-bottom:.3rem;">⚔️ ${b.n}</div>
+    <span class="ab2">${b.e}</span>
+    <div style="max-width:360px;margin:0 auto 1rem;"><div style="display:flex;justify-content:space-between;font-size:.72rem;color:var(--tm);margin-bottom:4px;"><span>HP</span><span id="ahpt">${bs.hp} / ${b.maxHp}</span></div>
+      <div style="height:13px;background:rgba(255,255,255,.06);border-radius:7px;overflow:hidden;border:1px solid rgba(220,38,38,.2);"><div id="ahpf" style="height:100%;background:linear-gradient(90deg,#7f1d1d,var(--cr),#ff6b6b);border-radius:7px;width:${pct}%;transition:width .8s;"></div></div>
+    </div>
+    <div style="display:flex;gap:7px;justify-content:center;flex-wrap:wrap;margin-bottom:.75rem;">
+      <button class="atk" onclick="atkSolo('${bid}','basic')">⚔️ Attack!</button>
+      <button class="atk" style="background:linear-gradient(135deg,#1e3a8a,var(--ro));" onclick="atkSolo('${bid}','spell')">🪄 Spell!</button>
+      <button class="atk" style="background:linear-gradient(135deg,#064e3b,var(--emd));" onclick="atkSolo('${bid}','team')">🛡 Team!</button>
+    </div>
+    <div style="font-size:.7rem;color:var(--tm);margin-bottom:.4rem;">Reward: <span style="color:var(--go);">${b.xpR} XP · ${b.goldR} Gold</span></div>
+    <div class="blog" id="sblog"><div class="ble">Battle begins...</div></div>
+  </div>`;openModal('m-boss');
+}
+function atkSolo(bid,type){
+  const b=BD.find(x=>x.id===bid);if(!D.bosses[bid])D.bosses[bid]={hp:b.maxHp};
+  const bs=D.bosses[bid];if(bs.hp<=0)return;
+  const dm={basic:[12,30],spell:[18,45],team:[25,55]}[type];
+  const d=Math.floor(Math.random()*(dm[1]-dm[0])+dm[0]),bd=Math.floor(Math.random()*18+5);
+  bs.hp=Math.max(0,bs.hp-d);sv(D);
+  const pct=Math.round((bs.hp/b.maxHp)*100);
+  const f=document.getElementById('ahpf'),t=document.getElementById('ahpt'),l=document.getElementById('sblog');
+  if(f)f.style.width=pct+'%';if(t)t.textContent=bs.hp+' / '+b.maxHp;
+  if(l){const e1=document.createElement('div');e1.className='ble h';e1.textContent=`⚔️ ${type}: ${d} dmg!`;const e2=document.createElement('div');e2.className='ble bh';e2.textContent=`👿 ${b.n} strikes ${bd}!`;l.prepend(e2);l.prepend(e1);}
+  if(bs.hp<=0){
+    if(l){const v=document.createElement('div');v.className='ble v';v.textContent=`🎉 VICTORY! ${b.n} defeated!`;l.prepend(v);}
+    if(D.students&&D.students.length){D.students[0].xp+=b.xpR;D.students[0].gold+=b.goldR;}
+    const rk=Object.keys(b.res||{})[0];if(rk)D.kingdom.res[rk]=(D.kingdom.res[rk]||0)+b.res[rk];
+    sv(D);setTimeout(()=>{closeModal('m-boss');rBosses();toast(`🏆 ${b.n} defeated! +${b.xpR} XP!`);},2000);
+  }
+}
+function rstBoss(bid){const b=BD.find(x=>x.id===bid);D.bosses[bid]={hp:b.maxHp};sv(D);rBosses();toast(`🔄 ${b.n} respawned!`);}
+
+// ═══════════════════════════════════════
+//  AWARDS PAGE
+// ═══════════════════════════════════════
+function rAwards(){
+  const auto=calcAutoAwards();
+  document.getElementById('autoaw').innerHTML=auto.length?auto.map(a=>`<div class="hfa"><div style="font-size:1.7rem;">${a.icon}</div><div><div style="font-family:'MedievalSharp',serif;font-size:.82rem;color:var(--gol);">${a.type}</div><div style="font-weight:700;font-size:.78rem;">🏆 ${a.winner}</div><div style="font-size:.62rem;color:var(--tm);">${a.note}</div></div></div>`).join(''):'<p style="color:var(--tm);font-size:.78rem;padding:.5rem;">Auto-awards calculate every Friday.</p>';
+  const ta=(D.awards||[]).filter(a=>a.special).slice(0,10);
+  document.getElementById('teachaw').innerHTML=ta.length?ta.map(a=>`<div class="hfa"><div style="font-size:1.7rem;">${a.icon||'🎖'}</div><div><div style="font-family:'MedievalSharp',serif;font-size:.82rem;color:var(--gol);">${a.type}</div><div style="font-weight:700;font-size:.78rem;">⭐ ${a.winner}</div><div style="font-size:.62rem;color:var(--tm);">${a.note||''} · ${a.date||''}</div></div></div>`).join(''):'<p style="color:var(--tm);font-size:.78rem;padding:.5rem;">Give special awards from the Teacher Dashboard.</p>';
+  document.getElementById('awhist').innerHTML=(D.hof&&D.hof.length)?D.hof.slice(0,20).map(a=>`<div class="hfa"><div style="font-size:1.7rem;">${a.icon||'🏆'}</div><div><div style="font-family:'MedievalSharp',serif;font-size:.82rem;color:var(--gol);">${a.type}</div><div style="font-weight:700;font-size:.78rem;">${a.winner}</div><div style="font-size:.62rem;color:var(--tm);">${a.note||''} · ${a.date||''}</div></div></div>`).join(''):'<p style="color:var(--tm);font-size:.78rem;padding:.5rem;">Award history will grow throughout the year.</p>';
+}
+
+// ═══════════════════════════════════════
+//  REWARD SHOP PAGE (Hero Points)
+// ═══════════════════════════════════════
+function rShop(){
+  // Populate hero selector
+  const sel=document.getElementById('shop-hero-sel');
+  if(D.students&&D.students.length){
+    sel.innerHTML=D.students.map((s,i)=>`<option value="${i}">${s.name} (${s.cls})</option>`).join('');
+  }else{sel.innerHTML='<option>No heroes enrolled</option>';}
+  rShopHeroStats();
+  // Render shop items
+  document.getElementById('shop-grid').innerHTML=SHOP_ITEMS.map(item=>`
+    <div class="shop-item">
+      <span class="si-icon">${item.icon}</span>
+      <div class="si-name">${item.name}</div>
+      <div class="si-cost">⭐ ${item.cost} Hero Points</div>
+      <div class="si-desc">${item.desc}</div>
+      <button class="btn bhp bsm" style="width:100%;" onclick="buyShopItem('${item.id}')">Request ⭐</button>
+    </div>`).join('');
+  rMyQueue();
+}
+
+function rShopHeroStats(){
+  const sel=document.getElementById('shop-hero-sel');if(!sel||!D.students||!D.students.length)return;
+  const s=D.students[parseInt(sel.value)||0];if(!s)return;
+  document.getElementById('shop-hero-stats').innerHTML=`
+    <div style="font-family:'MedievalSharp',serif;font-size:.85rem;color:var(--go);">${s.name}</div>
+    <div style="font-family:'Orbitron',monospace;font-size:1.1rem;color:var(--hp);">⭐ ${s.heroPoints||0}</div>
+    <div style="font-size:.62rem;color:var(--tm);">Hero Points</div>`;
+}
+
+function buyShopItem(iid){
+  const sel=document.getElementById('shop-hero-sel');if(!D.students||!D.students.length){toast('No heroes!','d');return;}
+  const s=D.students[parseInt(sel.value)||0];const item=SHOP_ITEMS.find(x=>x.id===iid);
+  if(!item){return;}
+  if((s.heroPoints||0)<item.cost){toast(`Not enough Hero Points! Need ${item.cost} ⭐, have ${s.heroPoints||0}.`,'d');return;}
+  // Deduct points and create queue entry
+  s.heroPoints=(s.heroPoints||0)-item.cost;
+  if(!D.rewardQueue)D.rewardQueue=[];
+  D.rewardQueue.push({id:'rq_'+Date.now(),heroName:s.name,heroClass:s.cls,itemId:iid,itemName:item.name,itemIcon:item.icon,cost:item.cost,status:'pending',date:new Date().toLocaleDateString()});
+  sv(D);rShop();rShopHeroStats();
+  toast(`${item.icon} "${item.name}" requested! Awaiting teacher approval.`,'hp');
+}
+
+function rMyQueue(){
+  const sel=document.getElementById('shop-hero-sel');if(!sel||!D.students||!D.students.length)return;
+  const s=D.students[parseInt(sel.value)||0];if(!s)return;
+  const mine=(D.rewardQueue||[]).filter(r=>r.heroName===s.name).slice(0,5);
+  const el=document.getElementById('my-queue');
+  if(!mine.length){el.innerHTML='<p style="color:var(--tm);font-size:.78rem;">No pending requests.</p>';return;}
+  el.innerHTML=mine.map(r=>`<div class="rq-item">
+    <div style="font-size:1.5rem;">${r.itemIcon}</div>
+    <div style="flex:1;"><div style="font-weight:700;font-size:.8rem;">${r.itemName}</div><div style="font-size:.62rem;color:var(--tm);">${r.date}</div></div>
+    <span class="rq-status rq-${r.status}">${r.status}</span>
+  </div>`).join('');
+}
+
+// ═══════════════════════════════════════
+//  TEACHER PAGE
+// ═══════════════════════════════════════
+function rTeacher(){updTSels();updatePrev();rXQBtns();rResInps();rCQList();rEvStatus();rQStats();rRewardQueue();rEmailLog();setTimeout(rCTable,0);}
+
+function rQStats(){
+  const s=D.students||[];const txp=s.reduce((a,x)=>a+x.xp,0);const thp=s.reduce((a,x)=>a+(x.heroPoints||0),0);const al=s.length?Math.round(s.reduce((a,x)=>a+getLv(x.xp),0)/s.length):0;const pending=(D.rewardQueue||[]).filter(r=>r.status==='pending').length;
+  document.getElementById('qstats').innerHTML=[
+    {l:'Heroes',v:s.length,c:'var(--tp)'},{l:'Total XP',v:txp,c:'var(--eml)'},
+    {l:'Total ⭐ HP',v:thp,c:'var(--hp)'},{l:'Avg Level',v:al,c:'var(--pul)'},
+    {l:'Pending Rewards',v:pending,c:pending>0?'var(--go)':'var(--tm)'},
+  ].map(x=>`<div style="background:rgba(0,0,0,.2);border-radius:8px;padding:9px;text-align:center;"><div style="font-size:.6rem;color:var(--tm);text-transform:uppercase;">${x.l}</div><div style="font-family:'Orbitron',monospace;font-size:1.1rem;color:${x.c};">${x.v}</div></div>`).join('');
+}
+
+function updTSels(){
+  const opts=D.students&&D.students.length?D.students.map((s,i)=>`<option value="${i}">${s.name} (${s.cls})</option>`).join(''):'<option>No heroes enrolled</option>';
+  ['thero'].forEach(id=>{const el=document.getElementById(id);if(el){const v=el.value;el.innerHTML=opts;if(v)el.value=v;}});
+  updatePrev();
+}
+function updatePrev(){
+  const sel=document.getElementById('thero'),pr=document.getElementById('hprev');
+  if(!sel||!pr||!D.students||!D.students.length)return;
+  const s=D.students[parseInt(sel.value)||0];if(!s)return;
+  pr.innerHTML=`<div style="font-weight:700;font-size:.8rem;">${s.name}</div>
+    <div style="font-family:'Orbitron',monospace;font-size:.68rem;color:var(--eml);">XP: ${s.xp}</div>
+    <div style="font-family:'Orbitron',monospace;font-size:.68rem;color:var(--go);">Gold: ${s.gold||0}</div>
+    <div style="font-family:'Orbitron',monospace;font-size:.68rem;color:var(--hp);">⭐: ${s.heroPoints||0}</div>
+    <div style="font-size:.62rem;color:var(--pul);">Lv ${getLv(s.xp)}</div>`;
+}
+function rXQBtns(){
+  document.getElementById('xqadd').innerHTML=[1,2,3,5,10,25].map(n=>`<button class="xqb" onclick="qXP(${n})">+${n}</button>`).join('');
+  document.getElementById('xqrm').innerHTML=[1,2,3,5].map(n=>`<button class="xqb rm" onclick="qXP(-${n})">−${n}</button>`).join('');
+  document.getElementById('hpqadd').innerHTML=[5,10,20,50].map(n=>`<button class="xqb hpb" onclick="quickHP(${n})">+${n} ⭐</button>`).join('');
+}
+function rResInps(){
+  document.getElementById('resinputs').innerHTML=['stone','wood','gold','knowledge'].map(r=>`<div><label class="fl">${RES_IC[r]} ${r.charAt(0).toUpperCase()+r.slice(1)}</label><input type="number" class="fi" id="ri-${r}" placeholder="0" min="0"></div>`).join('');
+}
+function rCQList(){
+  const cqs=D.customQ||[],el=document.getElementById('cqlist');if(!el)return;
+  if(!cqs.length){el.innerHTML='';return;}
+  el.innerHTML=`<div style="font-size:.65rem;color:var(--tm);text-transform:uppercase;margin-bottom:5px;font-weight:700;">Active Custom Quests</div>`+
+    cqs.map(q=>`<div style="display:flex;align-items:center;gap:7px;background:rgba(0,0,0,.2);border-radius:7px;padding:6px 9px;margin-bottom:4px;border:1px solid rgba(124,58,237,.2);">
+      <span>${q.i}</span><div style="flex:1;"><div style="font-weight:700;font-size:.75rem;">${q.t}</div><div style="font-size:.62rem;color:var(--tm);">+${q.r.xp||0} XP · ⭐${q.r.hp||0} · 💰${q.r.gold||0}${q.r.res?` · +${q.r.amt||20} ${q.r.res}`:''}</div></div>
+      <button class="btn bre bxs" onclick="delCQ('${q.id}')">🗑</button>
+    </div>`).join('');
+}
+function rEvStatus(){const el=document.getElementById('evstatus');if(!el)return;el.textContent=!D.event?'No active event. Generates automatically Monday.':(`Active: "${D.event.n}" [${D.event.rarity}] — ${D.event.completed?'✅ Complete':'In progress · '+getEvTimer()}`);}
+
+function rRewardQueue(){
+  const el=document.getElementById('reward-queue');if(!el)return;
+  const queue=D.rewardQueue||[];
+  if(!queue.length){el.innerHTML='<p style="color:var(--tm);font-size:.78rem;">No reward requests yet.</p>';return;}
+  el.innerHTML=queue.map((r,i)=>`<div class="rq-item">
+    <div style="font-size:1.5rem;">${r.itemIcon}</div>
+    <div style="flex:1;">
+      <div style="font-weight:700;font-size:.8rem;">${r.heroName} → ${r.itemName}</div>
+      <div style="font-size:.62rem;color:var(--tm);">${r.date} · Cost: ⭐${r.cost}</div>
+    </div>
+    <span class="rq-status rq-${r.status}">${r.status}</span>
+    ${r.status==='pending'?`<div style="display:flex;gap:4px;">
+      <button class="btn bem bxs" onclick="approveRQ(${i})">✓</button>
+      <button class="btn bre bxs" onclick="declineRQ(${i})">✗</button>
+    </div>`:''}
+    ${r.status==='approved'?`<button class="btn bpu bxs" onclick="completeRQ(${i})">Done</button>`:''}
+  </div>`).join('');
+}
+
+function approveRQ(i){D.rewardQueue[i].status='approved';sv(D);rRewardQueue();rQStats();toast(`✅ "${D.rewardQueue[i].itemName}" approved for ${D.rewardQueue[i].heroName}!`,'s');}
+function declineRQ(i){
+  const r=D.rewardQueue[i];
+  // Refund hero points
+  const s=D.students.find(x=>x.name===r.heroName);if(s)s.heroPoints=(s.heroPoints||0)+r.cost;
+  r.status='declined';sv(D);rRewardQueue();rQStats();toast(`Declined. ⭐${r.cost} refunded to ${r.heroName}.`,'d');
+}
+function completeRQ(i){D.rewardQueue[i].status='complete';sv(D);rRewardQueue();rQStats();toast(`🎉 "${D.rewardQueue[i].itemName}" completed for ${D.rewardQueue[i].heroName}!`,'s');}
+
+function rEmailLog(){
+  const el=document.getElementById('email-log');if(!el)return;
+  const logs=D.emailLog||[];
+  if(!logs.length){el.innerHTML='<p style="color:var(--tm);font-size:.78rem;">No emails logged yet.</p>';return;}
+  el.innerHTML=logs.slice(0,10).map(e=>`<div class="hfa"><div style="font-size:1.4rem;">📧</div><div><div style="font-weight:700;font-size:.78rem;">${e.hero}</div><div style="font-size:.62rem;color:var(--tm);">${e.note||'Positive email sent home'} · ${e.date}</div></div></div>`).join('');
+}
+function logEmail(){
+  const sel=document.getElementById('thero');if(!D.students||!D.students.length){toast('No heroes!','d');return;}
+  const s=D.students[parseInt(sel.value)||0];
+  if(!D.emailLog)D.emailLog=[];
+  D.emailLog.unshift({hero:s.name,note:'Positive email sent home',date:new Date().toLocaleDateString()});
+  D.emailLog=D.emailLog.slice(0,50);sv(D);rEmailLog();toast(`📧 Positive email logged for ${s.name}!`,'s');
+}
+
+function rCTable(){
+  if(!D.students||!D.students.length){document.getElementById('ctable').innerHTML='<p style="color:var(--tm);font-size:.78rem;padding:.4rem;">No heroes enrolled.</p>';return;}
+  document.getElementById('ctable').innerHTML=`<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:.75rem;">
+    <thead><tr style="border-bottom:1px solid rgba(255,255,255,.06);">${['Hero','Class','Lv','XP','⭐ HP','Gold','Badges','Wk XP'].map(h=>`<th style="padding:6px;text-align:${h==='Hero'||h==='Class'?'left':'right'};color:var(--tm);font-size:.62rem;text-transform:uppercase;">${h}</th>`).join('')}</tr></thead>
+    <tbody>${D.students.map(s=>`<tr style="border-bottom:1px solid rgba(255,255,255,.04);">
+      <td style="padding:6px;font-weight:700;">${s.name}</td>
+      <td style="padding:6px;"><span class="cb ${s.cls}">${s.cls}</span></td>
+      <td style="padding:6px;text-align:right;font-family:'Orbitron',monospace;font-size:.68rem;color:var(--pul);">${getLv(s.xp)}</td>
+      <td style="padding:6px;text-align:right;font-family:'Orbitron',monospace;font-size:.68rem;color:var(--eml);">${s.xp}</td>
+      <td style="padding:6px;text-align:right;font-family:'Orbitron',monospace;font-size:.68rem;color:var(--hp);">${s.heroPoints||0}</td>
+      <td style="padding:6px;text-align:right;font-family:'Orbitron',monospace;font-size:.68rem;color:var(--go);">${s.gold||0}</td>
+      <td style="padding:6px;text-align:right;font-size:.68rem;color:var(--tm);">${(s.achievements||[]).length}</td>
+      <td style="padding:6px;text-align:right;font-family:'Orbitron',monospace;font-size:.68rem;color:var(--em);">${D.weekXP[s.name]||0}</td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+// Teacher Actions
+function qXP(amt){const sel=document.getElementById('thero');if(!sel||!D.students||!D.students.length){toast('No heroes!','d');return;}awardXP(parseInt(sel.value)||0,amt,true);}
+function awardXP(idx,amt,notify){
+  const s=D.students[idx];if(!s)return;const pl=getLv(s.xp);
+  s.xp=Math.max(0,s.xp+amt);if(amt>0){D.weekXP[s.name]=(D.weekXP[s.name]||0)+amt;if(amt<=2)s.weeklyHelp=(s.weeklyHelp||0)+1;}
+  const nl=getLv(s.xp);sv(D);
+  if(notify){if(nl>pl)toast(`🎉 ${s.name} → Level ${nl}!`,'s');else toast(`${amt>0?'⚡':'💔'} ${s.name}: ${amt>0?'+':''}${amt} XP (${s.xp} total)`);}
+  updatePrev();updTSels();rCTable();
+}
+function cxp(mult){
+  const sel=document.getElementById('thero');const v=parseInt(document.getElementById('cxv').value);
+  if(!v||v<=0){toast('Enter valid XP!','d');return;}awardXP(parseInt(sel.value)||0,v*mult,true);document.getElementById('cxv').value='';
+}
+function quickHP(amt){
+  const sel=document.getElementById('thero');if(!sel||!D.students||!D.students.length){toast('No heroes!','d');return;}
+  const s=D.students[parseInt(sel.value)||0];s.heroPoints=(s.heroPoints||0)+amt;sv(D);updatePrev();rCTable();toast(`⭐ ${s.name} +${amt} Hero Points!`,'hp');
+}
+function addHP(){
+  const sel=document.getElementById('thero');const v=parseInt(document.getElementById('hpcv').value);
+  if(!v||v<=0){toast('Enter valid amount!','d');return;}
+  const s=D.students[parseInt(sel.value)||0];s.heroPoints=(s.heroPoints||0)+v;sv(D);document.getElementById('hpcv').value='';updatePrev();rCTable();toast(`⭐ ${s.name} +${v} Hero Points!`,'hp');
+}
+function rmHP(){
+  const sel=document.getElementById('thero');const v=parseInt(document.getElementById('hpcv').value);
+  if(!v||v<=0){toast('Enter valid amount!','d');return;}
+  const s=D.students[parseInt(sel.value)||0];s.heroPoints=Math.max(0,(s.heroPoints||0)-v);sv(D);document.getElementById('hpcv').value='';updatePrev();rCTable();toast(`💔 Removed ${v} ⭐ from ${s.name}`,'d');
+}
+function addGold(){
+  const sel=document.getElementById('thero');const v=parseInt(document.getElementById('gav').value);
+  if(!v||v<=0||!D.students||!D.students.length){toast('Enter valid amount!','d');return;}
+  const s=D.students[parseInt(sel.value)||0];s.gold=(s.gold||0)+v;if(!s.pkRes)s.pkRes={stone:0,wood:0,gold:0,knowledge:0};s.pkRes.gold=(s.pkRes.gold||0)+v;
+  D.kingdom.treasury=(D.kingdom.treasury||0)+Math.floor(v*.1);sv(D);document.getElementById('gav').value='';updatePrev();rCTable();toast(`💰 ${s.name} +${v} Gold`);
+}
+function rmGold2(){
+  const sel=document.getElementById('thero');const v=parseInt(document.getElementById('gav').value);
+  if(!v||v<=0||!D.students||!D.students.length){toast('Enter valid amount!','d');return;}
+  const s=D.students[parseInt(sel.value)||0];if((s.gold||0)<v){toast(`Only has ${s.gold||0} Gold!`,'d');return;}
+  s.gold=Math.max(0,(s.gold||0)-v);sv(D);document.getElementById('gav').value='';updatePrev();rCTable();toast(`💔 Removed ${v} Gold from ${s.name}`,'d');
+}
+function addRes(){
+  const keys=['stone','wood','gold','knowledge'];let added=false;
+  keys.forEach(k=>{const el=document.getElementById('ri-'+k);if(!el)return;const v=parseInt(el.value)||0;if(v>0){D.kingdom.res[k]=(D.kingdom.res[k]||0)+v;added=true;}el.value='';});
+  if(!added){toast('Enter at least one amount!','d');return;}sv(D);toast('🏰 Resources added!');
+}
+function giveAch(){
+  const sel=document.getElementById('thero');if(!D.students||!D.students.length){toast('No heroes!','d');return;}
+  const s=D.students[parseInt(sel.value)||0];const cat=document.getElementById('accat').value;const nm=document.getElementById('acnm').value.trim()||cat;
+  if(!s.achievements)s.achievements=[];s.achievements.push({cat,name:nm,date:new Date().toLocaleDateString()});
+  sv(D);document.getElementById('acnm').value='';toast(`🏅 "${nm}" awarded to ${s.name}!`);updatePrev();
+}
+function giveSpecial(){
+  if(!D.students||!D.students.length){toast('No heroes!','d');return;}
+  const sel=document.getElementById('thero'),s=D.students[parseInt(sel.value)||0];
+  const type=document.getElementById('sptype').value,note=document.getElementById('spnote').value.trim();
+  const icons={'Most Helpful Hero':'🤝','Teamwork Champion':'🛡','Growth Mindset':'🌱','Perseverance':'💪','Classroom Leader':'👑'};
+  const aw={type,icon:icons[type]||'🎖',winner:s.name,note,date:new Date().toLocaleDateString(),special:true,wk:getWkKey()};
+  if(!D.awards)D.awards=[];D.awards.unshift(aw);D.hof=[aw,...(D.hof||[])].slice(0,100);sv(D);
+  document.getElementById('spnote').value='';toast(`🎖 ${type} → ${s.name}!`,'s');
+}
+function publishQ(){
+  const t=document.getElementById('cqt').value.trim(),i=document.getElementById('cqi').value.trim()||'📋';
+  const d=document.getElementById('cqd').value.trim();
+  const xp=parseInt(document.getElementById('cqxp').value)||0,gold=parseInt(document.getElementById('cqg').value)||0;
+  const hp=parseInt(document.getElementById('cqhp').value)||0;
+  const res=document.getElementById('cqres').value,amt=parseInt(document.getElementById('cqamt').value)||20;
+  if(!t){toast('Add a quest title!','d');return;}if(!d){toast('Add instructions!','d');return;}
+  if(!xp&&!gold&&!hp&&!res){toast('Add at least one reward!','d');return;}
+  if(!D.customQ)D.customQ=[];
+  D.customQ.push({id:'cq_'+Date.now(),t,i,d,r:{xp,gold,hp,res:res||null,amt},custom:true});
+  sv(D);['cqt','cqi','cqd','cqxp','cqg','cqhp','cqamt'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('cqres').value='';rCQList();toast(`⭐ Quest "${t}" published!`);
+}
+function delCQ(id){D.customQ=(D.customQ||[]).filter(q=>q.id!==id);delete D.quests[id];sv(D);rCQList();toast('Quest removed.','d');}
+
+// ═══════════════════════════════════════
+//  CONTRIBUTE & REPAIR (Class Kingdom)
+// ═══════════════════════════════════════
+function openContribute(){
+  const res=D.kingdom.res;
+  document.getElementById('contriblist').innerHTML=getAllB().map(b=>{
+    const bd=D.kingdom.buildings[b.id]||{spent:{},dur:100};
+    const tR=Object.values(b.r).reduce((a,c)=>a+c,0);
+    const tS=Object.values(bd.spent||{}).reduce((a,c)=>a+c,0);
+    const pct=Math.min(100,Math.round(tS/tR*100));const built=pct>=100;const dur=bd.dur===undefined?100:bd.dur;
+    const canB=!built&&Object.entries(b.r).some(([k,v])=>(res[k]||0)>0&&(bd.spent[k]||0)<v);
+    const canR=built&&dur<100&&Object.entries(b.r).some(([k])=>(res[k]||0)>=10);
+    const dc=dur>70?'var(--em)':dur>40?'var(--go)':'var(--cr)';
+    const rqStr=Object.entries(b.r).map(([k,v])=>`${RES_IC[k]}${Math.min(bd.spent[k]||0,v)}/${v}`).join(' ');
+    return`<div style="background:rgba(0,0,0,.2);border-radius:9px;padding:9px 11px;margin-bottom:6px;border:1px solid rgba(255,255,255,.05);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+        <div style="font-family:'MedievalSharp',serif;font-size:.82rem;color:${built?'var(--eml)':'var(--gol)'};">${b.e} ${b.n} ${built?'✅':''}</div>
+        <div style="display:flex;gap:4px;">
+          ${canB?`<button class="btn bxs bgo" onclick="contrib('${b.id}')">Build ⚒</button>`:''}
+          ${canR?`<button class="btn bxs bor" onclick="repair('${b.id}')">Repair 🔧</button>`:''}
+          ${!canB&&!built?`<span style="font-size:.6rem;color:var(--tm);">Need resources</span>`:''}
+          ${built&&dur>=100?`<span style="font-size:.6rem;color:var(--em);">Perfect ✓</span>`:''}
+        </div>
+      </div>
+      <div style="font-size:.65rem;color:var(--tm);margin-bottom:4px;">${rqStr}</div>
+      ${built?`<div style="display:flex;align-items:center;gap:4px;margin-bottom:1px;"><span style="font-size:.58rem;color:var(--tm);width:46px;text-align:right;">Dur</span><div class="pb" style="flex:1;height:4px;"><div class="pf du" style="width:${dur}%;background:${dc};"></div></div><span style="font-size:.58rem;color:${dc};margin-left:3px;">${dur}%</span></div>`:
+      `<div class="pb" style="height:4px;"><div class="pf go" style="width:${pct}%"></div></div><div style="font-size:.6rem;color:var(--tm);text-align:right;margin-top:2px;">${pct}%</div>`}
+    </div>`;
+  }).join('');
+  openModal('m-contrib');
+}
+function contrib(bid){
+  const allB=getAllB(),b=allB.find(x=>x.id===bid);if(!b)return;
+  const res=D.kingdom.res;if(!D.kingdom.buildings[bid])D.kingdom.buildings[bid]={spent:{},dur:100};
+  const bd=D.kingdom.buildings[bid];if(!bd.spent)bd.spent={};let done=false;
+  Object.entries(b.r).forEach(([k,v])=>{const sp=bd.spent[k]||0,rem=v-sp;if(rem<=0||(res[k]||0)<=0)return;const give=Math.min(rem,res[k]);res[k]-=give;bd.spent[k]=sp+give;done=true;});
+  if(!done){toast('No matching resources!','d');return;}
+  bd.progress=Object.values(bd.spent).reduce((a,c)=>a+c,0);sv(D);openContribute();rResDsp();rKMap();
+  const tR=Object.values(b.r).reduce((a,c)=>a+c,0);const pct=Math.min(100,Math.round(bd.progress/tR*100));
+  if(pct>=100){toast(`🎉 ${b.n} is complete!`,'s');checkTierUp();}else toast(`⚒ Contributed to ${b.n}! (${pct}%)`);
+}
+function repair(bid){
+  const allB=getAllB(),b=allB.find(x=>x.id===bid);if(!b)return;
+  const res=D.kingdom.res,bd=D.kingdom.buildings[bid];if(!bd)return;
+  let rep=false;Object.entries(b.r).forEach(([k])=>{if((res[k]||0)>=10){res[k]-=10;rep=true;}});
+  if(!rep){toast('Need 10+ of each required resource!','d');return;}
+  bd.dur=Math.min(100,(bd.dur||0)+20);sv(D);openContribute();rKMap();toast(`🔧 ${b.n} repaired! Durability: ${bd.dur}%`);
+}
+function checkTierUp(){
+  const t=D.kingdom.tier||1,tb=TB[t]||[];
+  const ok=tb.every(b=>{const bd=D.kingdom.buildings[b.id]||{spent:{}};const tR=Object.values(b.r).reduce((a,c)=>a+c,0);const tS=Object.values(bd.spent||{}).reduce((a,c)=>a+c,0);return tS>=tR;});
+  if(ok&&TB[t+1]){
+    D.kingdom.tier=t+1;sv(D);
+    const nm={2:'The Expanding Realm',3:'The Grand Empire',4:'The Legendary Age'};const em={2:'🌟',3:'👑',4:'💎'};const nb=TB[t+1]||[];
+    document.getElementById('tuemo').textContent=em[t+1]||'🎉';
+    document.getElementById('tutit').textContent=`Kingdom Tier ${t+1}!`;
+    document.getElementById('tudesc').textContent=`Welcome to Tier ${t+1}: ${nm[t+1]||'Age of Legends'}. ${nb.length} new buildings unlocked!`;
+    document.getElementById('tublds').innerHTML=nb.map(b=>`<span title="${b.n}">${b.e}</span>`).join('');
+    openModal('m-tierup');
+  }
+}
+
+// ═══════════════════════════════════════
+//  UTILITIES
+// ═══════════════════════════════════════
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.mo').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+function toast(msg,type=''){
+  const el=document.createElement('div');el.className=`toast ${type==='s'?'s':type==='d'?'d':type==='hp'?'hp':''}`;
+  el.innerHTML=`<span>${type==='s'?'✅':type==='d'?'❌':type==='hp'?'⭐':'⚡'}</span><span>${msg}</span>`;
+  document.getElementById('tc').appendChild(el);setTimeout(()=>el.remove(),3100);
+}
+setInterval(()=>rEvMini(),60000);
+
+// ═══════════════════════════════════════
+//  SEED DATA
+// ═══════════════════════════════════════
+function seedDemo(){
+  if(D.students&&D.students.length>0)return;
+  const demo=[
+    {name:'Aria Thornwood',cls:'Scholar',xp:85,gold:40,heroPoints:35,achievements:[{cat:'Thinker',name:'Logic Master'},{cat:'Inquirer',name:'Curiosity Award'}]},
+    {name:'Brom Ironfist',cls:'Builder',xp:62,gold:30,heroPoints:20,achievements:[{cat:'Risk-Taker',name:'Bold Adventurer'}]},
+    {name:'Celeste Moon',cls:'Explorer',xp:110,gold:55,heroPoints:60,achievements:[{cat:'Caring',name:'Kind Heart'},{cat:'Communicator',name:'Great Speaker'}]},
+    {name:'Darin Quickfoot',cls:'Inventor',xp:42,gold:20,heroPoints:15,achievements:[{cat:'Thinker',name:'Creative Mind'}]},
+    {name:'Elara Wisewand',cls:'Historian',xp:97,gold:45,heroPoints:45,achievements:[{cat:'Communicator',name:'Storyteller'}]},
+  ];
+  D.students=demo.map(s=>migrate_student(s));
+  // Give some personal resources to each hero for demo
+  D.students.forEach((s,i)=>{s.pkRes={stone:30+i*10,wood:25+i*8,gold:s.gold,knowledge:40+i*12};});
+  D.kingdom.res={stone:85,wood:120,gold:45,knowledge:160};
+  D.kingdom.treasury=300;D.kingdom.tier=1;
+  D.kingdom.buildings={
+    castle:{spent:{stone:200,gold:150},progress:350,dur:75},
+    library:{spent:{wood:100,knowledge:100},progress:200,dur:100},
+  };
+  D.cbossId='b1';D.cbossHP=380;D.bosses={b4:{hp:0}};
+  D.weekXP={Aria:85,Brom:62,Celeste:110,Darin:42,Elara:97};
+  D.streak=1;D.lastLogin=getTodayKey();
+  if(!D.event)genEvent(getWkKey());sv(D);
+}
+
+// ═══════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════
+// Show migration notice if applicable
+if(gls('k3_migrated')==='1'){
+  setTimeout(()=>toast('✅ Your v2 heroes have been migrated to v3!','s'),1000);
+  sls('k3_migrated','done');
+}
+seedDemo();
+autoRun();
+rClassKingdom();
+</script>
+
+<!-- ═══════════════════════════════════════
+     CLOUD SYNC (Firebase / Firestore)
+     The whole class shares one document, so heroes, quests, kingdom
+     progress AND the teacher PIN sync live across every device.
+     ═══════════════════════════════════════ -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js';
+import { getFirestore, doc, onSnapshot, setDoc } from 'https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js';
+
+// ─── Your Firebase project config ───
+const firebaseConfig = {
+  apiKey: "AIzaSyBHz0-SI83plv3eNTLgoBzFn_Hh0qCPEJg",
+  authDomain: "kingdoms-of-mr-jay.firebaseapp.com",
+  projectId: "kingdoms-of-mr-jay",
+  storageBucket: "kingdoms-of-mr-jay.firebasestorage.app",
+  messagingSenderId: "689899036507",
+  appId: "1:689899036507:web:de7d67f174190a2718447e"
+};
+
+try{
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+  const ref = doc(db, 'kingdoms', 'main');   // one shared document for the class
+  let lastJSON = null;                         // guards against echoing our own writes
+
+  // Push the whole shared state up to the cloud (called by sv()).
+  window.__cloudSave = function(state){
+    try{
+      const json = JSON.stringify(state);
+      if(json === lastJSON) return;            // nothing actually changed
+      lastJSON = json;
+      setDoc(ref, { data: json, ts: Date.now() }).catch(e=>console.warn('cloud save failed', e));
+    }catch(e){ console.warn('cloud save error', e); }
+  };
+
+  // Listen for changes made on any device (including the first load).
+  onSnapshot(ref, (snap)=>{
+    if(!snap.exists()){
+      // Empty cloud: seed it with whatever this device currently has.
+      if(window.__getCloudState) window.__cloudSave(window.__getCloudState());
+      return;
+    }
+    const d = snap.data();
+    if(!d || !d.data) return;
+    if(d.data === lastJSON) return;            // this is our own change coming back
+    lastJSON = d.data;
+    try{ if(window.applyCloudState) window.applyCloudState(JSON.parse(d.data)); }
+    catch(e){ console.warn('apply cloud state failed', e); }
+  }, (err)=>{ console.warn('cloud listener error', err); });
+
+  window.__cloudReady = true;
+  console.log('[Kingdoms] Cloud sync connected.');
+}catch(e){
+  console.warn('[Kingdoms] Cloud sync could not start — running in local-only mode.', e);
+}
+</script>
+</body>
+</html>
